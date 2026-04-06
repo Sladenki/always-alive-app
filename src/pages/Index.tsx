@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
 import AuthSheet from '@/components/AuthSheet';
 import BottomNav from '@/components/BottomNav';
 import MatchFlowOverlay from '@/components/MatchFlowOverlay';
+import OpeningSplash from '@/components/OpeningSplash';
 import FeedPage from '@/pages/FeedPage';
 import MapPage from '@/pages/MapPage';
 import EventDetailPage from '@/pages/EventDetailPage';
@@ -11,11 +12,15 @@ import MyEventsPage from '@/pages/MyEventsPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import { mockEvents } from '@/data/mockData';
+import { cn } from '@/lib/utils';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [matchEventId, setMatchEventId] = useState<string | null>(null);
+  const [splashActive, setSplashActive] = useState(true);
+
+  const finishSplash = useCallback(() => setSplashActive(false), []);
 
   const handleEventClick = (id: string) => {
     setSelectedEventId(id);
@@ -26,6 +31,8 @@ const Index = () => {
   };
 
   const matchEvent = matchEventId ? mockEvents.find((e) => e.id === matchEventId) : undefined;
+
+  const contentKey = selectedEventId ?? activeTab;
 
   const renderContent = () => {
     if (selectedEventId) {
@@ -38,24 +45,47 @@ const Index = () => {
       );
     }
     switch (activeTab) {
-      case 'feed': return <FeedPage onEventClick={handleEventClick} />;
-      case 'map': return <MapPage onEventClick={handleEventClick} />;
-      case 'myevents': return <MyEventsPage onEventClick={handleEventClick} />;
-      case 'notifications': return <NotificationsPage onOpenMatch={(id) => setMatchEventId(id)} />;
-      case 'profile': return <ProfilePage onNavigateToFeed={() => setActiveTab('feed')} />;
-      default: return <FeedPage onEventClick={handleEventClick} />;
+      case 'feed':
+        return <FeedPage onEventClick={handleEventClick} />;
+      case 'map':
+        return <MapPage onEventClick={handleEventClick} />;
+      case 'myevents':
+        return <MyEventsPage onEventClick={handleEventClick} />;
+      case 'notifications':
+        return <NotificationsPage onOpenMatch={(id) => setMatchEventId(id)} />;
+      case 'profile':
+        return <ProfilePage onNavigateToFeed={() => setActiveTab('feed')} />;
+      default:
+        return <FeedPage onEventClick={handleEventClick} />;
     }
   };
 
   return (
     <AuthProvider>
       <AppStateProvider>
-        <div className="min-h-screen bg-background">
-          {renderContent()}
+        <OpeningSplash active={splashActive} onComplete={finishSplash} />
+        <div
+          className={cn(
+            'min-h-screen bg-background transition-opacity duration-500 ease-out overflow-x-hidden',
+            splashActive ? 'opacity-0' : 'opacity-100',
+          )}
+        >
+          <div
+            key={contentKey}
+            className={cn('max-w-full overflow-x-hidden', !selectedEventId && 'animate-tab-screen-in')}
+          >
+            {renderContent()}
+          </div>
           {matchEvent && (
             <MatchFlowOverlay event={matchEvent} open onClose={() => setMatchEventId(null)} />
           )}
-          <BottomNav activeTab={activeTab} onTabChange={(tab) => { setSelectedEventId(null); setActiveTab(tab); }} />
+          <BottomNav
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setSelectedEventId(null);
+              setActiveTab(tab);
+            }}
+          />
           <AuthSheet />
         </div>
       </AppStateProvider>

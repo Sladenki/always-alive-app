@@ -7,9 +7,10 @@ import {
 } from '@/data/mockData';
 import type { GraphEventNodeData, PersonData } from '@/data/types';
 import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
+import { useCountUp } from '@/hooks/useCountUp';
 
 interface ProfilePageProps {
   onNavigateToFeed: () => void;
@@ -19,6 +20,18 @@ function userInitials(name: string): string {
   const p = name.trim().split(/\s+/);
   if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
+}
+
+function timeGreeting(name: string): string {
+  const h = new Date().getHours();
+  const n = name.trim() || 'друг';
+  if (h >= 6 && h < 12) return `Доброе утро, ${n} ☀️`;
+  if (h >= 12 && h < 18) return `Привет, ${n}`;
+  return `Добрый вечер, ${n} 🌙`;
+}
+
+function purpleLike(n: GraphEventNodeData): boolean {
+  return n.connectionCount >= 2 && !n.isUpcoming;
 }
 
 function ProfileGraphBoard({
@@ -39,6 +52,29 @@ function ProfileGraphBoard({
 
   return (
     <svg viewBox="0 0 320 210" className="w-full max-w-sm mx-auto" aria-hidden>
+      {nodes.map((_, i) => {
+        const a = positions[i];
+        const b = positions[(i + 1) % nodes.length];
+        const na = nodes[i];
+        const nb = nodes[(i + 1) % nodes.length];
+        const fast = purpleLike(na) || purpleLike(nb);
+        const subtle = na.isUpcoming && nb.isUpcoming;
+        return (
+          <line
+            key={`e-${i}`}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke={subtle ? 'rgba(255,255,255,0.08)' : 'rgba(124,58,237,0.4)'}
+            strokeWidth={subtle ? 1 : 1.15}
+            strokeDasharray={subtle ? '3 8' : '6 9'}
+            strokeDashoffset={0}
+            className={subtle ? 'graph-edge-march-slow' : fast ? 'graph-edge-march-fast' : 'graph-edge-march-slow'}
+            style={{ opacity: subtle ? 0.65 : 0.95 }}
+          />
+        );
+      })}
       {nodes.map((node, i) => {
         const p = positions[i];
         const r = 12 + Math.min(14, node.connectionCount * 3.5);
@@ -48,51 +84,40 @@ function ProfileGraphBoard({
         const fill = isUp ? 'transparent' : purple ? '#7c3aed' : blue ? '#3b82f6' : 'hsl(230, 15%, 22%)';
         const stroke = isUp ? '#6b7280' : 'rgba(255,255,255,0.15)';
         const dash = isUp ? '5 4' : undefined;
+        const dur = 2 + (i % 3) * 0.35;
         return (
-          <g key={node.id} className="cursor-pointer" onClick={() => onSelect(node)}>
-            <circle
-              cx={p.x}
-              cy={p.y}
-              r={r + 6}
-              fill="transparent"
-              className="transition-transform hover:scale-105"
-            />
-            <circle
-              cx={p.x}
-              cy={p.y}
-              r={r}
-              fill={fill}
-              stroke={stroke}
-              strokeWidth={isUp ? 2 : 1.5}
-              strokeDasharray={dash}
-            />
-            <text
-              x={p.x}
-              y={p.y + 4}
-              textAnchor="middle"
-              fill="white"
-              fontSize={node.shortLabel.length > 5 ? 9 : 11}
-              fontWeight="600"
+          <g key={node.id} transform={`translate(${p.x} ${p.y})`} className="cursor-pointer" onClick={() => onSelect(node)}>
+            <g
+              className="animate-graph-node-breathe"
+              style={
+                {
+                  '--breathe-delay': `${i * 0.45}s`,
+                  '--breathe-dur': `${dur}s`,
+                } as CSSProperties
+              }
             >
-              {node.shortLabel}
-            </text>
+              <circle cx={0} cy={0} r={r + 6} fill="transparent" />
+              <circle
+                cx={0}
+                cy={0}
+                r={r}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={isUp ? 2 : 1.5}
+                strokeDasharray={dash}
+              />
+              <text
+                x={0}
+                y={4}
+                textAnchor="middle"
+                fill="white"
+                fontSize={node.shortLabel.length > 5 ? 9 : 11}
+                fontWeight="600"
+              >
+                {node.shortLabel}
+              </text>
+            </g>
           </g>
-        );
-      })}
-      {/* faint edges between nodes */}
-      {nodes.map((_, i) => {
-        const a = positions[i];
-        const b = positions[(i + 1) % nodes.length];
-        return (
-          <line
-            key={`e-${i}`}
-            x1={a.x}
-            y1={a.y}
-            x2={b.x}
-            y2={b.y}
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth="1"
-          />
         );
       })}
     </svg>
@@ -110,6 +135,10 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
   );
 
   const stats = useMemo(() => getGraphProfileStats(mergedNodes), [mergedNodes]);
+
+  const cAtt = useCountUp(stats.attended, 800, isAuthenticated);
+  const cConn = useCountUp(stats.connections, 800, isAuthenticated);
+  const cUp = useCountUp(stats.upcoming, 800, isAuthenticated);
 
   const connections = useMemo(() => {
     const people = new Map<string, PersonData>();
@@ -134,8 +163,9 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
           <p className="text-foreground font-medium mb-1 mt-6">Твой граф пока пуст</p>
           <p className="text-sm text-muted-foreground mb-6">Сходи на первое событие</p>
           <button
+            type="button"
             onClick={onNavigateToFeed}
-            className="py-3 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 flex items-center gap-2 active:scale-[0.97] transition-transform"
+            className="py-3 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 flex items-center gap-2 transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110"
           >
             <Search className="w-4 h-4" />
             Найти первое событие →
@@ -149,10 +179,13 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
     <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
       <h1 className="text-2xl font-bold text-foreground mb-5">Профиль</h1>
       <div className="glass rounded-xl p-5 animate-fade-up border border-white/5">
+        <p className="text-xl font-medium text-foreground text-center mb-4">{timeGreeting(userName)}</p>
         <div className="flex flex-col items-center">
           <ProfileGraphBoard nodes={mergedNodes} onSelect={(n) => setSheetNode(n)} />
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            {stats.attended} события · {stats.connections} знакомств · {stats.upcoming} предстоящих
+          <p className="text-xs text-muted-foreground mt-2 text-center leading-relaxed">
+            <span className="text-foreground font-medium tabular-nums text-sm">{cAtt}</span> события ·{' '}
+            <span className="text-foreground font-medium tabular-nums text-sm">{cConn}</span> знакомств ·{' '}
+            <span className="text-foreground font-medium tabular-nums text-sm">{cUp}</span> предстоящих
           </p>
           <h2 className="text-xl font-bold text-foreground mt-4">{userName}</h2>
           <p className="text-sm text-muted-foreground mb-1">{userRole}</p>
@@ -160,8 +193,9 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
             <div className="text-center mt-4">
               <p className="text-sm text-muted-foreground">Добавь связи на событиях</p>
               <button
+                type="button"
                 onClick={onNavigateToFeed}
-                className="mt-3 py-2 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 active:scale-[0.97] transition-all"
+                className="mt-3 py-2 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110"
               >
                 Найти событие →
               </button>
@@ -174,8 +208,12 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
         <div className="mt-4">
           <h3 className="text-foreground font-semibold mb-3">Твои связи</h3>
           <div className="space-y-2">
-            {connections.map((c) => (
-              <div key={c.id} className="glass rounded-xl p-3 flex items-center gap-3 border border-white/5">
+            {connections.map((c, i) => (
+              <div
+                key={c.id}
+                className="profile-connection-card glass rounded-xl p-3 flex items-center gap-3 border border-white/5 bg-card/40"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
                 {c.avatarUrl ? (
                   <img src={c.avatarUrl} alt={c.name} className="w-9 h-9 rounded-full object-cover" />
                 ) : (
@@ -190,7 +228,7 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
                 <button
                   type="button"
                   onClick={() => toast('Чат скоро появится')}
-                  className="text-xs font-semibold text-[#7c3aed] shrink-0 active:scale-[0.97] transition-transform"
+                  className="text-xs font-semibold text-[#7c3aed] shrink-0 transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110"
                 >
                   Написать
                 </button>
@@ -229,7 +267,7 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
                     <button
                       type="button"
                       onClick={() => toast('Чат скоро появится')}
-                      className="text-sm font-semibold text-[#7c3aed] shrink-0 active:scale-[0.97]"
+                      className="text-sm font-semibold text-[#7c3aed] shrink-0 transition-[transform,filter] duration-150 active:scale-[0.96]"
                     >
                       Написать
                     </button>

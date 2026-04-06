@@ -23,6 +23,9 @@ export const placeholderPeople: PersonData[] = [
   { id: 'ph3', name: 'Студент БФУ', role: 'Ещё не указал кто он', isPlaceholder: true },
 ];
 
+/** Людей в городе «сейчас куда-то идут» — для живого блока на ленте */
+export const CITY_GOING_COUNT = 47;
+
 export const mockEvents: EventData[] = [
   {
     id: 'e1',

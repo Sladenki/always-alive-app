@@ -1,4 +1,6 @@
 import { Map, Zap, Calendar, Bell, User } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
   activeTab: string;
@@ -14,18 +16,30 @@ const tabs = [
 ];
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+  const [popTab, setPopTab] = useState<string | null>(null);
+
+  const handleTab = (id: string) => {
+    setPopTab(id);
+    window.setTimeout(() => setPopTab(null), 220);
+    onTabChange(id);
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-border/30">
       <div className="max-w-md mx-auto flex items-center justify-around py-2 px-1">
         {tabs.map(({ id, icon: Icon, label }) => (
           <button
             key={id}
-            onClick={() => onTabChange(id)}
-            className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors ${
-              activeTab === id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            type="button"
+            onClick={() => handleTab(id)}
+            className={cn(
+              'flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors transition-transform duration-150 active:scale-[0.96]',
+              activeTab === id ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+            )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon
+              className={cn('w-5 h-5', popTab === id ? 'animate-nav-tab-icon-pop' : '')}
+            />
             <span className="text-[10px] font-medium">{label}</span>
           </button>
         ))}

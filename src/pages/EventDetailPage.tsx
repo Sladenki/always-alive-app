@@ -1,4 +1,5 @@
 import { mockEvents, getInterestCount, getAttendeesWithPlaceholders } from '@/data/mockData';
+import { interestNumberClass } from '@/lib/interestText';
 import { eventImages } from '@/data/eventImages';
 import PersonCard from '@/components/PersonCard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -118,8 +119,8 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Eye className="w-4 h-4 text-muted-foreground" />
-            <span className={event.temperature === 'hot' ? 'text-hot font-semibold' : event.temperature === 'warm' ? 'text-foreground' : 'text-muted-foreground'}>
-              интересуются: {interest} человек
+            <span className={interestNumberClass(interest)}>
+              интересуются: <span className="tabular-nums">{interest}</span> человек
             </span>
           </div>
         </div>
@@ -137,10 +138,11 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
           </div>
         ) : (
           <button
+            type="button"
             onClick={handleSignUp}
-            className={`w-full py-3.5 rounded-xl font-semibold transition-all ${
+            className={`w-full py-3.5 rounded-xl font-semibold transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110 ${
               event.temperature === 'hot'
-                ? 'bg-hot text-primary-foreground animate-pulse-glow'
+                ? 'bg-hot text-primary-foreground'
                 : 'bg-primary text-primary-foreground hover:opacity-90'
             }`}
           >

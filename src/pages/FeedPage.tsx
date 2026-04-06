@@ -1,6 +1,7 @@
-import { mockEvents, getTodayEvents, getTomorrowEvents, getInterestCount } from '@/data/mockData';
+import { mockEvents, getTodayEvents, getTomorrowEvents, CITY_GOING_COUNT } from '@/data/mockData';
 import EventCard from '@/components/EventCard';
 import { Moon } from 'lucide-react';
+import { useCountUp } from '@/hooks/useCountUp';
 
 interface FeedPageProps {
   onEventClick: (id: string) => void;
@@ -10,11 +11,32 @@ export default function FeedPage({ onEventClick }: FeedPageProps) {
   const today = getTodayEvents();
   const tomorrow = getTomorrowEvents();
   const showQuiet = today.length === 0;
+  const laterEvents = mockEvents.filter((e) => e.date !== 'Сегодня' && e.date !== 'Завтра');
+  const pulseCount = useCountUp(CITY_GOING_COUNT, 1200);
+
+  const showDayEndFooter = !showQuiet || tomorrow.length > 0 || laterEvents.length > 0;
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-1">Сейчас</h1>
-      <p className="text-sm text-muted-foreground mb-5">Что происходит в Калининграде</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Сейчас</p>
+
+      <div className="relative flex flex-col items-center justify-center mb-6 min-h-[120px]">
+        <div
+          className="pointer-events-none absolute w-[120px] h-[120px] rounded-full animate-city-breathe-bg"
+          aria-hidden
+        />
+        <span
+          className="relative text-[56px] font-medium leading-none text-white tabular-nums"
+          style={{ fontFeatureSettings: '"tnum"' }}
+        >
+          {pulseCount}
+        </span>
+        <p className="relative mt-2 text-base text-muted-foreground text-center px-2">
+          человек сегодня куда-то идут
+        </p>
+      </div>
+
+      <p className="text-sm text-muted-foreground mb-5 text-center">Что происходит в Калининграде</p>
 
       {showQuiet ? (
         <div className="text-center py-8 animate-fade-up">
@@ -38,21 +60,38 @@ export default function FeedPage({ onEventClick }: FeedPageProps) {
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Завтра</p>
           <div className="space-y-3">
             {tomorrow.map((event, i) => (
-              <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i + today.length} />
+              <EventCard
+                key={event.id}
+                event={event}
+                onClick={() => onEventClick(event.id)}
+                index={i + today.length}
+              />
             ))}
           </div>
         </>
       )}
 
-      {mockEvents.filter(e => e.date !== 'Сегодня' && e.date !== 'Завтра').length > 0 && (
+      {laterEvents.length > 0 && (
         <>
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 mt-6 font-semibold">Скоро</p>
           <div className="space-y-3">
-            {mockEvents.filter(e => e.date !== 'Сегодня' && e.date !== 'Завтра').map((event, i) => (
-              <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i} />
+            {laterEvents.map((event, i) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                onClick={() => onEventClick(event.id)}
+                index={i + today.length + tomorrow.length}
+              />
             ))}
           </div>
         </>
+      )}
+
+      {showDayEndFooter && (
+        <div className="mt-10 mb-6 text-center space-y-2 animate-fade-up">
+          <p className="text-foreground font-medium">Это всё на сегодня 🌙</p>
+          <p className="text-sm text-muted-foreground">Завтра появится новое · обновление в 08:00</p>
+        </div>
       )}
     </div>
   );
