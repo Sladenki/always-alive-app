@@ -1,16 +1,56 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { AuthProvider } from '@/contexts/AuthContext';
+import AuthSheet from '@/components/AuthSheet';
+import BottomNav from '@/components/BottomNav';
+import FeedPage from '@/pages/FeedPage';
+import MapPage from '@/pages/MapPage';
+import EventDetailPage from '@/pages/EventDetailPage';
+import MyEventsPage from '@/pages/MyEventsPage';
+import NotificationsPage from '@/pages/NotificationsPage';
+import ProfilePage from '@/pages/ProfilePage';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [activeTab, setActiveTab] = useState('feed');
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+
+  const handleEventClick = (id: string) => {
+    setSelectedEventId(id);
+  };
+
+  const handleBack = () => {
+    setSelectedEventId(null);
+  };
+
+  const renderContent = () => {
+    if (selectedEventId) {
+      return <EventDetailPage eventId={selectedEventId} onBack={handleBack} />;
+    }
+
+    switch (activeTab) {
+      case 'feed':
+        return <FeedPage onEventClick={handleEventClick} />;
+      case 'map':
+        return <MapPage onEventClick={handleEventClick} />;
+      case 'myevents':
+        return <MyEventsPage onEventClick={handleEventClick} />;
+      case 'notifications':
+        return <NotificationsPage />;
+      case 'profile':
+        return <ProfilePage onNavigateToFeed={() => setActiveTab('feed')} />;
+      default:
+        return <FeedPage onEventClick={handleEventClick} />;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <AuthProvider>
+      <div className="min-h-screen bg-background">
+        {renderContent()}
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => { setSelectedEventId(null); setActiveTab(tab); }} />
+        <AuthSheet />
+      </div>
+    </AuthProvider>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
