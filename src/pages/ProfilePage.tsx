@@ -259,12 +259,33 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
       <div className="glass rounded-xl p-5 animate-fade-up border border-white/5">
         <p className="text-xl font-medium text-foreground text-center mb-4">{timeGreeting(userName)}</p>
         <div className="flex flex-col items-center">
+          <div className="w-full max-w-sm rounded-xl border border-white/10 bg-black/20 px-3 py-3 mb-3 text-left">
+            <p className="text-xs font-semibold text-foreground mb-2">Как читать граф</p>
+            <ul className="text-[11px] text-muted-foreground space-y-1.5 leading-snug list-none">
+              <li className="flex gap-2">
+                <span className="shrink-0 min-w-[5.25rem] text-foreground/90">Круг</span>
+                <span>событие по афише — уже был(а) или записан(а)</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 min-w-[5.25rem] text-teal-400/90">Шестиугольник</span>
+                <span>место в городе (кафе, парк…) и люди, с кем пересеклись там</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 min-w-[5.25rem] text-[#a78bfa]/90">Линии</span>
+                <span>
+                  бирюзовая — связь через место; фиолетовая — сильные пересечения по событиям; пунктир —
+                  оба узла — ещё предстоящие события
+                </span>
+              </li>
+              <li className="text-white/45 pt-0.5">Тап по узлу на кольце — детали и список знакомых.</li>
+            </ul>
+          </div>
           <ProfileGraphBoard nodes={mergedNodes} onSelect={(n) => setSheetNode(n)} />
           <p className="text-xs text-muted-foreground mt-2 text-center leading-relaxed">
-            <span className="text-foreground font-medium tabular-nums text-sm">{cSpots}</span> событий и
-            мест · <span className="text-foreground font-medium tabular-nums text-sm">{cConn}</span>{' '}
-            знакомств ·{' '}
-            <span className="text-foreground font-medium tabular-nums text-sm">{cUp}</span> предстоящих
+            <span className="text-foreground font-medium tabular-nums text-sm">{cSpots}</span> точек на графе
+            · <span className="text-foreground font-medium tabular-nums text-sm">{cConn}</span> разных людей
+            в круге · <span className="text-foreground font-medium tabular-nums text-sm">{cUp}</span>{' '}
+            предстоящих событий
           </p>
           <h2 className="text-xl font-bold text-foreground mt-4">{userName}</h2>
           <p className="text-sm text-muted-foreground mb-1">{userRole}</p>

@@ -132,7 +132,7 @@ function PlaceConnectionAnim({
   onDone: () => void;
 }) {
   useEffect(() => {
-    const t = window.setTimeout(onDone, 4000);
+    const t = window.setTimeout(onDone, 5200);
     return () => clearTimeout(t);
   }, [onDone]);
 
@@ -212,7 +212,6 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
     useAppState();
   const [phase, setPhase] = useState<Phase>('match');
   const meetStarted = useRef(false);
-  const autoMeetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const person = demoPlaceMatchPerson;
   const uInit = userInitials(userName || 'Гость');
@@ -230,42 +229,22 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
   const handleMeet = useCallback(() => {
     if (meetStarted.current) return;
     meetStarted.current = true;
-    if (autoMeetTimer.current) {
-      clearTimeout(autoMeetTimer.current);
-      autoMeetTimer.current = null;
-    }
     setPhase('wait');
     window.setTimeout(() => {
       setPhase('typing');
-      window.setTimeout(() => setPhase('connection'), 1400);
-    }, 2400);
+      window.setTimeout(() => setPhase('connection'), 3000);
+    }, 3600);
   }, []);
 
   useEffect(() => {
     if (open) {
       setPhase('match');
       meetStarted.current = false;
-      if (autoMeetTimer.current) {
-        clearTimeout(autoMeetTimer.current);
-        autoMeetTimer.current = null;
-      }
       return;
     }
     setPhase('match');
     meetStarted.current = false;
-    if (autoMeetTimer.current) {
-      clearTimeout(autoMeetTimer.current);
-      autoMeetTimer.current = null;
-    }
   }, [open]);
-
-  useEffect(() => {
-    if (!open || phase !== 'match') return;
-    autoMeetTimer.current = setTimeout(() => handleMeet(), 5200);
-    return () => {
-      if (autoMeetTimer.current) clearTimeout(autoMeetTimer.current);
-    };
-  }, [open, phase, handleMeet]);
 
   const handleSkip = () => {
     setPhase('done');
@@ -285,12 +264,28 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
   if (!open) return null;
 
   const shareCard = (
-    <div className="rounded-2xl border border-white/10 bg-[#1e2130] p-5 shadow-2xl">
-      <p className="text-center text-lg font-semibold text-white mt-2">Мой граф в Калининграде</p>
-      <p className="text-center text-sm text-muted-foreground mt-1">
-        {stats.eventsAndPlaces} событий и мест · {stats.connectionsUnique} связей
+    <div className="rounded-2xl border border-white/10 bg-[#1e2130] p-5 shadow-2xl text-left space-y-3">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-teal-400/80">Сводка для друзей</p>
+        <p className="text-base font-semibold text-white mt-1 leading-snug">
+          Где я бываю и с кем пересекаюсь в Калининграде
+        </p>
+      </div>
+      <p className="text-sm text-white/60 leading-relaxed">
+        Это короткий текстовый пост: сколько у тебя на графе точек (события + места) и сколько разных людей
+        там связано. Не геолокация и не список адресов — только цифры «живого» присутствия в городе.
       </p>
-      <p className="text-center text-xs text-white/40 mt-4 tracking-wide">Nexus</p>
+      <div className="rounded-xl bg-black/25 border border-white/5 px-3 py-3 space-y-1">
+        <p className="text-sm text-white">
+          <span className="font-semibold tabular-nums">{stats.eventsAndPlaces}</span> точек на графе{' '}
+          <span className="text-white/45">(события и места)</span>
+        </p>
+        <p className="text-sm text-white">
+          <span className="font-semibold tabular-nums">{stats.connectionsUnique}</span> человек в круге по
+          событиям и местам
+        </p>
+      </div>
+      <p className="text-center text-[11px] text-white/35 tracking-wide pt-1">Nexus</p>
     </div>
   );
 
@@ -353,14 +348,26 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
       )}
 
       {phase === 'wait' && (
-        <div className="fixed inset-0 z-[4000] flex items-center justify-center bg-[#0f1117]/92 px-6">
-          <p className="text-sm text-muted-foreground">Ожидаем ответ…</p>
+        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0f1117]/92 px-6 gap-3 animate-in fade-in duration-300">
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-2 h-2 rounded-full bg-teal-400/80 animate-pulse"
+                style={{ animationDelay: `${i * 180}ms` }}
+              />
+            ))}
+          </div>
+          <p className="text-sm text-white/85 font-medium text-center">Отправляем приглашение познакомиться…</p>
+          <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed">
+            Пока собеседник не ответил, можно подождать на этом экране
+          </p>
         </div>
       )}
 
       {phase === 'typing' && (
-        <div className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/75 px-6">
-          <div className="flex flex-col items-center gap-3">
+        <div className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/75 px-6 animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-4">
             <div className="flex gap-1">
               {[0, 1, 2].map((i) => (
                 <span
@@ -370,7 +377,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
                 />
               ))}
             </div>
-            <p className="text-white text-sm font-medium">Максим отвечает...</p>
+            <p className="text-white text-sm font-medium">Максим отвечает…</p>
           </div>
         </div>
       )}
@@ -386,32 +393,43 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
       )}
 
       {phase === 'share' && (
-        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-black/80 px-4 animate-in fade-in">
-          <p className="text-white font-semibold mb-4">Поделиться своим графом</p>
+        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-black/82 px-4 py-8 animate-in fade-in duration-500">
+          <div className="w-full max-w-sm space-y-2 mb-4 text-center">
+            <p className="text-teal-400/90 text-xs font-medium uppercase tracking-wide">Готово</p>
+            <h3 className="text-lg font-bold text-white leading-tight">
+              {person.name} добавлен в твой граф
+            </h3>
+            <p className="text-sm text-white/55 leading-relaxed">
+              Открой профиль — увидишь новую связь через это место. Ниже — опционально отправить друзьям
+              короткую сводку цифрами (без адресов).
+            </p>
+          </div>
           {shareCard}
           <button
             type="button"
-            className="mt-6 w-full max-w-sm py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-[#0f172a] bg-teal-400 active:scale-[0.97] transition-transform"
-            onClick={async () => {
-              const text = `Мой граф в Калининграде — ${stats.eventsAndPlaces} точек, ${stats.connectionsUnique} связей. Nexus`;
-              try {
-                if (navigator.share) await navigator.share({ title: 'Nexus', text });
-              } catch {
-                /* */
-              }
-              handleShareFinish();
-            }}
+            className="mt-6 w-full max-w-sm py-3.5 rounded-xl font-semibold text-[#0f172a] bg-teal-400 hover:bg-teal-300 active:scale-[0.97] transition-transform"
+            onClick={handleShareFinish}
           >
-            <Share className="w-4 h-4" />
-            Поделиться
+            Продолжить
           </button>
           <button
             type="button"
-            onClick={handleShareFinish}
-            className="mt-3 text-sm text-muted-foreground active:scale-[0.97]"
+            className="mt-3 w-full max-w-sm py-3 rounded-xl font-semibold flex items-center justify-center gap-2 border border-white/15 text-white/90 hover:bg-white/5 active:scale-[0.97] transition-colors"
+            onClick={async () => {
+              const text = `В Калининграде у меня на графе Nexus ${stats.eventsAndPlaces} точек (события и места) и ${stats.connectionsUnique} человек в круге — без адресов, просто о том, как я живу город.`;
+              try {
+                if (navigator.share) await navigator.share({ title: 'Nexus — граф в городе', text });
+              } catch {
+                /* */
+              }
+            }}
           >
-            Закрыть
+            <Share className="w-4 h-4 opacity-90" />
+            Отправить сводку друзьям
           </button>
+          <p className="mt-3 text-[11px] text-white/40 text-center max-w-xs">
+            «Отправить» откроет меню системы; можно отменить и просто нажать «Продолжить».
+          </p>
         </div>
       )}
     </>
