@@ -1,13 +1,20 @@
-import { mockEvents, getTodayEvents, getTomorrowEvents, CITY_GOING_COUNT } from '@/data/mockData';
+import {
+  mockEvents,
+  getTodayEvents,
+  getTomorrowEvents,
+  CITY_GOING_COUNT,
+  feedLivePlacesMock,
+} from '@/data/mockData';
 import EventCard from '@/components/EventCard';
 import { Moon } from 'lucide-react';
 import { useCountUp } from '@/hooks/useCountUp';
 
 interface FeedPageProps {
   onEventClick: (id: string) => void;
+  onOpenMapPlace: (placeId: string) => void;
 }
 
-export default function FeedPage({ onEventClick }: FeedPageProps) {
+export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps) {
   const today = getTodayEvents();
   const tomorrow = getTomorrowEvents();
   const showQuiet = today.length === 0;
@@ -34,6 +41,35 @@ export default function FeedPage({ onEventClick }: FeedPageProps) {
         <p className="relative mt-2 text-base text-muted-foreground text-center px-2">
           человек сегодня куда-то идут
         </p>
+      </div>
+
+      <div className="mb-7">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">
+          Прямо сейчас в городе
+        </p>
+        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+          {feedLivePlacesMock.map((row) => (
+            <div
+              key={row.placeId}
+              className="min-w-[158px] shrink-0 rounded-xl border border-teal-500/20 bg-card/60 p-3 backdrop-blur-sm"
+            >
+              <p className="text-[13px] font-bold text-foreground leading-tight">{row.name}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {row.hereCount} человек здесь
+              </p>
+              {row.friendLine && (
+                <p className="text-[11px] text-teal-400 font-medium mt-1.5">{row.friendLine}</p>
+              )}
+              <button
+                type="button"
+                onClick={() => onOpenMapPlace(row.placeId)}
+                className="mt-2 text-[11px] font-semibold text-teal-400/90 hover:text-teal-300 transition-colors active:scale-[0.98]"
+              >
+                Зайти на карту
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground mb-5 text-center">Что происходит в Калининграде</p>

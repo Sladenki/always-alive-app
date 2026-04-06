@@ -1,9 +1,12 @@
 import {
+  CityPlaceData,
   EventData,
   GraphEventNodeData,
+  GraphPlaceNodeData,
   MatchPersonData,
   NotificationData,
   PersonData,
+  ProfileGraphNode,
 } from './types';
 
 const realPeople: PersonData[] = [
@@ -163,6 +166,15 @@ export const demoMatchPerson: MatchPersonData = {
   initials: 'А',
 };
 
+/** Совпадение в месте (демо) */
+export const demoPlaceMatchPerson: MatchPersonData = {
+  id: 'gx-maxim',
+  name: 'Максим',
+  subtitle: 'Разработчик',
+  bio: 'Люблю стендап и кофе',
+  initials: 'М',
+};
+
 const gpAlina: PersonData = { id: 'gx-alina', name: 'Алина', role: 'Дизайн', avatarUrl: 'https://i.pravatar.cc/150?img=1' };
 const gpMaxim: PersonData = { id: 'gx-maxim', name: 'Максим', role: 'Dev', avatarUrl: 'https://i.pravatar.cc/150?img=3' };
 const gpKatya: PersonData = { id: 'gx-katya', name: 'Катя', role: 'Студентка', avatarUrl: 'https://i.pravatar.cc/150?img=5' };
@@ -223,6 +235,240 @@ export const graphProfileEventsMock: GraphEventNodeData[] = [
   },
 ];
 
+/** Стартовые визиты пользователя по местам (демо) */
+export const initialPlaceVisitCounts: Record<string, number> = {
+  'p-tipografia': 3,
+  'p-kgtu': 12,
+  'p-bufet': 1,
+};
+
+export const mockPlaces: CityPlaceData[] = [
+  {
+    id: 'p-tipografia',
+    name: 'Антикафе «Типография»',
+    category: 'Антикафе',
+    icon: '☕',
+    lat: 54.7104,
+    lng: 20.4522,
+    totalBeenHere: 128,
+    recentPeople: [gpAlina, gpMaxim, gpKatya],
+    hereNow: gpMaxim,
+    friendsHaveBeen: true,
+  },
+  {
+    id: 'p-bufet',
+    name: 'Кофейня «Буфет»',
+    category: 'Кофейня',
+    icon: '☕',
+    lat: 54.7065,
+    lng: 20.511,
+    totalBeenHere: 86,
+    recentPeople: [gpAlina, gpDima, gpSonya],
+    friendsHaveBeen: true,
+  },
+  {
+    id: 'p-park-pobedy',
+    name: 'Парк Победы',
+    category: 'Парк',
+    icon: '🌳',
+    lat: 54.7227,
+    lng: 20.485,
+    totalBeenHere: 340,
+    recentPeople: [gpKatya, gpDima, gpSonya],
+    friendsHaveBeen: false,
+  },
+  {
+    id: 'p-kgtu',
+    name: 'КГТУ',
+    category: 'Вуз',
+    icon: '🎓',
+    lat: 54.7138,
+    lng: 20.3967,
+    totalBeenHere: 2100,
+    recentPeople: [gpKatya, gpDima, gpSonya],
+    friendsHaveBeen: true,
+  },
+  {
+    id: 'p-bfu',
+    name: 'БФУ им. Канта',
+    category: 'Вуз',
+    icon: '🎓',
+    lat: 54.7196,
+    lng: 20.513,
+    totalBeenHere: 1800,
+    recentPeople: [gpAlina, gpMaxim, gpSonya],
+    friendsHaveBeen: true,
+  },
+  {
+    id: 'p-ploshad',
+    name: 'Площадь Победы',
+    category: 'Площадь',
+    icon: '📍',
+    lat: 54.7139,
+    lng: 20.5115,
+    totalBeenHere: 920,
+    recentPeople: [gpMaxim, gpKatya, gpDima],
+    friendsHaveBeen: false,
+  },
+  {
+    id: 'p-rybnaya',
+    name: 'Рыбная деревня',
+    category: 'Район',
+    icon: '🐟',
+    lat: 54.7011,
+    lng: 20.5083,
+    totalBeenHere: 412,
+    recentPeople: [gpAlina, gpKatya, gpSonya],
+    friendsHaveBeen: true,
+  },
+];
+
+/** Узлы мест на графе профиля */
+export const graphProfilePlacesMock: GraphPlaceNodeData[] = [
+  {
+    nodeType: 'place',
+    id: 'gp-tipografia',
+    shortLabel: 'Типография',
+    fullTitle: 'Антикафе «Типография»',
+    placeId: 'p-tipografia',
+    visitCount: 3,
+    people: [gpAlina, gpMaxim],
+  },
+  {
+    nodeType: 'place',
+    id: 'gp-kgtu',
+    shortLabel: 'КГТУ',
+    fullTitle: 'Калининградский государственный технический университет',
+    placeId: 'p-kgtu',
+    visitCount: 12,
+    people: [gpKatya, gpDima, gpSonya],
+  },
+  {
+    nodeType: 'place',
+    id: 'gp-bufet',
+    shortLabel: 'Буфет',
+    fullTitle: 'Кофейня «Буфет»',
+    placeId: 'p-bufet',
+    visitCount: 1,
+    people: [gpAlina],
+  },
+];
+
+export const placeNotificationsMock: NotificationData[] = [
+  {
+    id: 'pn-map',
+    icon: '🟢',
+    text: 'Алина сейчас в Типографии — ты рядом?',
+    time: 'только что',
+    isRead: false,
+    kind: 'place_map',
+    placeId: 'p-tipografia',
+  },
+  {
+    id: 'pn-sheet',
+    icon: '📍',
+    text: 'Ты был в Типографии 3 раза — это твоё место',
+    time: '5 мин',
+    isRead: false,
+    kind: 'place_sheet',
+    placeId: 'p-tipografia',
+  },
+  {
+    id: 'pn-match',
+    icon: '🤝',
+    text: 'Максим тоже бывает в Буфете — у вас общее место',
+    time: '1 ч',
+    isRead: false,
+    kind: 'place_match',
+    placeId: 'p-bufet',
+  },
+];
+
+/** Карточки «Прямо сейчас в городе» на ленте */
+export const feedLivePlacesMock = [
+  {
+    placeId: 'p-tipografia' as const,
+    name: 'Антикафе «Типография»',
+    hereCount: 7,
+    friendLine: 'Алина здесь 🟢' as string | null,
+  },
+  {
+    placeId: 'p-bufet' as const,
+    name: 'Кофейня «Буфет»',
+    hereCount: 4,
+    friendLine: null as string | null,
+  },
+  {
+    placeId: 'p-park-pobedy' as const,
+    name: 'Парк Победы',
+    hereCount: 12,
+    friendLine: null as string | null,
+  },
+];
+
+export function getPlaceById(placeId: string): CityPlaceData | undefined {
+  return mockPlaces.find((p) => p.id === placeId);
+}
+
+export function isPlaceGraphNode(n: ProfileGraphNode): n is GraphPlaceNodeData {
+  return (n as GraphPlaceNodeData).nodeType === 'place';
+}
+
+export function mergePlaceGraphWithAcquaintances(
+  base: GraphPlaceNodeData[],
+  acc: Record<string, PersonData[]>,
+  visitOverrides: Record<string, number>,
+): GraphPlaceNodeData[] {
+  return base.map((node) => {
+    const added = acc[node.placeId] ?? [];
+    const mergedPeople = [...node.people];
+    const ids = new Set(mergedPeople.map((p) => p.id));
+    for (const p of added) {
+      if (!ids.has(p.id)) {
+        mergedPeople.push(p);
+        ids.add(p.id);
+      }
+    }
+    const visitCount = Math.max(node.visitCount, visitOverrides[node.placeId] ?? 0);
+    return { ...node, people: mergedPeople, visitCount };
+  });
+}
+
+export function getCombinedGraphStats(
+  eventNodes: GraphEventNodeData[],
+  placeNodes: GraphPlaceNodeData[],
+) {
+  const attendedEvents = eventNodes.filter((n) => !n.isUpcoming).length;
+  const upcoming = eventNodes.filter((n) => n.isUpcoming).length;
+  const placeCount = placeNodes.length;
+  const eventsAndPlaces = attendedEvents + placeCount;
+  const ids = new Set<string>();
+  eventNodes.forEach((n) =>
+    n.people.forEach((p) => {
+      if (!p.isPlaceholder) ids.add(p.id);
+    }),
+  );
+  placeNodes.forEach((n) =>
+    n.people.forEach((p) => {
+      if (!p.isPlaceholder) ids.add(p.id);
+    }),
+  );
+  return {
+    eventsAndPlaces,
+    connectionsUnique: ids.size,
+    upcoming,
+    attendedEvents,
+    placeCount,
+  };
+}
+
+export function buildCombinedProfileNodes(
+  events: GraphEventNodeData[],
+  places: GraphPlaceNodeData[],
+): ProfileGraphNode[] {
+  return [...events, ...places];
+}
+
 export function getMatchTagLine(event: EventData): string {
   return `${event.title} · ${event.date} ${event.time}`;
 }
@@ -236,6 +482,14 @@ export function getEventCenterNodeLabel(event: EventData): string {
 
 export function getMatchPersonForEvent(_eventId: string): MatchPersonData {
   return demoMatchPerson;
+}
+
+export function matchPlacePersonToPersonData(): PersonData {
+  return {
+    id: demoPlaceMatchPerson.id,
+    name: demoPlaceMatchPerson.name,
+    role: demoPlaceMatchPerson.subtitle,
+  };
 }
 
 export function getGraphProfileStats(nodes: GraphEventNodeData[]) {

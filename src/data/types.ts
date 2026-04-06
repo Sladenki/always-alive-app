@@ -26,7 +26,15 @@ export interface PersonData {
   isPlaceholder?: boolean;
 }
 
-export type NotificationKind = 'onboarding' | 'fomo';
+export type NotificationKind =
+  | 'onboarding'
+  | 'fomo'
+  /** Открыть карту на месте */
+  | 'place_map'
+  /** Открыть карту + карточку места */
+  | 'place_sheet'
+  /** Место: совпадение как на событии */
+  | 'place_match';
 
 export interface NotificationData {
   id: string;
@@ -37,6 +45,37 @@ export interface NotificationData {
   kind?: NotificationKind;
   /** For FOMO: opens match moment for this feed event */
   eventId?: string;
+  /** For place notifications */
+  placeId?: string;
+}
+
+/** Точка города на карте (чек-ин) */
+export interface CityPlaceData {
+  id: string;
+  name: string;
+  category: string;
+  icon: string;
+  lat: number;
+  lng: number;
+  /** Сколько человек было здесь (в моке) */
+  totalBeenHere: number;
+  /** До 3 аватаров для листа */
+  recentPeople: PersonData[];
+  /** Кто сейчас здесь (демо) */
+  hereNow?: PersonData;
+  /** Друзья/сеть бывали здесь, а ты ещё нет — синий контур */
+  friendsHaveBeen: boolean;
+}
+
+/** Узел места на графе профиля (шестиугольник) */
+export interface GraphPlaceNodeData {
+  nodeType: 'place';
+  id: string;
+  shortLabel: string;
+  fullTitle: string;
+  placeId: string;
+  visitCount: number;
+  people: PersonData[];
 }
 
 /** Person shown on match / connection screens (richer than feed PersonData) */
@@ -51,6 +90,7 @@ export interface MatchPersonData {
 
 /** One event node on the profile graph */
 export interface GraphEventNodeData {
+  nodeType?: 'event';
   id: string;
   shortLabel: string;
   fullTitle: string;
@@ -61,3 +101,5 @@ export interface GraphEventNodeData {
   feedEventIds: string[];
   people: PersonData[];
 }
+
+export type ProfileGraphNode = GraphEventNodeData | GraphPlaceNodeData;

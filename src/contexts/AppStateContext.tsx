@@ -8,7 +8,7 @@ import {
   useEffect,
 } from 'react';
 import type { NotificationData, PersonData } from '@/data/types';
-import { demoMatchPerson } from '@/data/mockData';
+import { demoMatchPerson, initialPlaceVisitCounts } from '@/data/mockData';
 
 const FOMO_DATE_KEY = 'nexus_fomo_last_sent_date';
 
@@ -36,12 +36,22 @@ interface AppStateContextType {
   signedUpEventIds: Set<string>;
   signUpForEvent: (eventId: string) => void;
   isSignedUp: (eventId: string) => boolean;
-  /** People you met at a feed event (by event id) */
   eventAcquaintances: Record<string, PersonData[]>;
   addAcquaintanceAtEvent: (eventId: string, person: PersonData) => void;
   getAcquaintancesForEvent: (eventId: string) => PersonData[];
+
+  placeVisitCounts: Record<string, number>;
+  getPlaceVisitCount: (placeId: string) => number;
+  /** Текущий чек-ин в месте (+1) */
+  incrementPlaceVisit: (placeId: string) => void;
+
+  placeAcquaintances: Record<string, PersonData[]>;
+  addAcquaintanceAtPlace: (placeId: string, person: PersonData) => void;
+  getAcquaintancesForPlace: (placeId: string) => PersonData[];
+
   fomoNotifications: NotificationData[];
   markNotificationRead: (id: string) => void;
+  isNotificationRead: (id: string, fallbackRead: boolean) => boolean;
 }
 
 const AppStateContext = createContext<AppStateContextType | null>(null);
@@ -57,7 +67,12 @@ function matchPersonToPersonData(): PersonData {
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [signedUpEventIds, setSignedUpEventIds] = useState<Set<string>>(new Set());
   const [eventAcquaintances, setEventAcquaintances] = useState<Record<string, PersonData[]>>({});
+  const [placeVisitCounts, setPlaceVisitCounts] = useState<Record<string, number>>(() => ({
+    ...initialPlaceVisitCounts,
+  }));
+  const [placeAcquaintances, setPlaceAcquaintances] = useState<Record<string, PersonData[]>>({});
   const [fomoNotifications, setFomoNotifications] = useState<NotificationData[]>([]);
+  const [readNotificationIds, setReadNotificationIds] = useState<Record<string, boolean>>({});
   const fomoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -127,11 +142,43 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [eventAcquaintances],
   );
 
-  const markNotificationRead = useCallback((id: string) => {
-    setFomoNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
+  const incrementPlaceVisit = useCallback((placeId: string) => {
+    setPlaceVisitCounts((prev) => ({
+      ...prev,
+      [placeId]: (prev[placeId] ?? 0) + 1,
+    }));
   }, []);
+
+  const getPlaceVisitCount = useCallback(
+    (placeId: string) => {
+      return placeVisitCounts[placeId] ?? 0;
+    },
+    [placeVisitCounts],
+  );
+
+  const addAcquaintanceAtPlace = useCallback((placeId: string, person: PersonData) => {
+    setPlaceAcquaintances((prev) => {
+      const cur = prev[placeId] ?? [];
+      if (cur.some((p) => p.id === person.id)) return prev;
+      return { ...prev, [placeId]: [...cur, person] };
+    });
+  }, []);
+
+  const getAcquaintancesForPlace = useCallback(
+    (placeId: string) => {
+      return placeAcquaintances[placeId] ?? [];
+    },
+    [placeAcquaintances],
+  );
+
+  const markNotificationRead = useCallback((id: string) => {
+    setReadNotificationIds((prev) => ({ ...prev, [id]: true }));
+    setFomoNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+  }, []);
+
+  const isNotificationRead = useCallback((id: string, fallbackRead: boolean) => {
+    return readNotificationIds[id] === true || fallbackRead;
+  }, [readNotificationIds]);
 
   return (
     <AppStateContext.Provider
@@ -142,8 +189,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         eventAcquaintances,
         addAcquaintanceAtEvent,
         getAcquaintancesForEvent,
+        placeVisitCounts,
+        incrementPlaceVisit,
+        getPlaceVisitCount,
+        placeAcquaintances,
+        addAcquaintanceAtPlace,
+        getAcquaintancesForPlace,
         fomoNotifications,
         markNotificationRead,
+        isNotificationRead,
       }}
     >
       {children}

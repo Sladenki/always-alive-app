@@ -233,6 +233,189 @@
   animation-delay: 0.22s;
 }
 
+.place-match-graph .match-tri-line {
+  animation-duration: 1.55s;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.place-match-graph .match-tri-line--d1 {
+  animation-delay: 0.22s;
+}
+
+.place-match-graph .match-tri-line--d2 {
+  animation-delay: 0.48s;
+}
+
+@keyframes place-line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-place-line-draw {
+  stroke-dasharray: 10 7;
+  stroke-dashoffset: 140;
+  animation: place-line-draw 2.35s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+
+@keyframes place-node-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-place-node-pop {
+  transform-origin: 256px 80px;
+  animation: place-node-pop 1.15s cubic-bezier(0.34, 1.2, 0.64, 1) 0.95s both;
+}
+
+@keyframes mood-timer-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.animate-mood-timer {
+  transform-origin: left center;
+  animation: mood-timer-shrink var(--mood-duration, 8s) linear forwards;
+}
+
+@keyframes place-conn-avatar-left {
+  from {
+    transform: translateX(-130%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes place-conn-avatar-right {
+  from {
+    transform: translateX(130%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes place-conn-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes place-conn-center-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes place-conn-line {
+  from {
+    stroke-dashoffset: 72;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-place-conn-left {
+  animation: place-conn-avatar-left 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-place-conn-right {
+  animation: place-conn-avatar-right 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-place-conn-pulse {
+  animation: place-conn-pulse 0.85s ease-in-out 1.35s both;
+}
+
+.animate-place-conn-center {
+  animation: place-conn-center-pop 0.88s cubic-bezier(0.34, 1.2, 0.64, 1) 1.12s both;
+}
+
+.animate-place-conn-line {
+  stroke-dasharray: 8 5;
+  stroke-dashoffset: 72;
+  animation: place-conn-line 1.15s ease-out 1.45s both;
+}
+
+@keyframes place-conn-title {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-place-conn-title {
+  animation: place-conn-title 0.65s cubic-bezier(0.22, 1, 0.36, 1) 2.35s both;
+}
+
+.animate-place-conn-sub {
+  animation: place-conn-title 0.55s ease-out 2.65s both;
+}
+
+@keyframes place-graph-caption {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-place-graph-caption {
+  animation: place-graph-caption 0.65s ease-out 1.85s both;
+}
+
+@keyframes map-place-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+    opacity: 0.9;
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(34, 197, 94, 0);
+    opacity: 1;
+  }
+}
+
+.map-place-now {
+  animation: map-place-pulse 1.6s ease-in-out infinite;
+}
+
 .animate-connection-left {
   animation: connection-avatar-in-left 0.55s ease-out forwards;
 }

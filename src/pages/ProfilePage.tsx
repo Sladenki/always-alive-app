@@ -2,10 +2,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
 import {
   graphProfileEventsMock,
-  getGraphProfileStats,
+  graphProfilePlacesMock,
   mergeGraphNodesWithAcquaintances,
+  mergePlaceGraphWithAcquaintances,
+  buildCombinedProfileNodes,
+  getCombinedGraphStats,
+  isPlaceGraphNode,
 } from '@/data/mockData';
-import type { GraphEventNodeData, PersonData } from '@/data/types';
+import type { GraphEventNodeData, PersonData, ProfileGraphNode } from '@/data/types';
 import { Search } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -34,16 +38,25 @@ function purpleLike(n: GraphEventNodeData): boolean {
   return n.connectionCount >= 2 && !n.isUpcoming;
 }
 
+function hexPoints(r: number): string {
+  const pts: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i - Math.PI / 6;
+    pts.push(`${(r * Math.cos(a)).toFixed(2)},${(r * Math.sin(a)).toFixed(2)}`);
+  }
+  return pts.join(' ');
+}
+
 function ProfileGraphBoard({
   nodes,
   onSelect,
 }: {
-  nodes: GraphEventNodeData[];
-  onSelect: (n: GraphEventNodeData) => void;
+  nodes: ProfileGraphNode[];
+  onSelect: (n: ProfileGraphNode) => void;
 }) {
   const cx = 160;
   const cy = 105;
-  const ringR = 92;
+  const ringR = 102;
 
   const positions = nodes.map((_, i) => {
     const a = (i * 2 * Math.PI) / nodes.length - Math.PI / 2;
@@ -51,14 +64,25 @@ function ProfileGraphBoard({
   });
 
   return (
-    <svg viewBox="0 0 320 210" className="w-full max-w-sm mx-auto" aria-hidden>
+    <svg viewBox="0 0 320 220" className="w-full max-w-sm mx-auto" aria-hidden>
       {nodes.map((_, i) => {
         const a = positions[i];
         const b = positions[(i + 1) % nodes.length];
         const na = nodes[i];
         const nb = nodes[(i + 1) % nodes.length];
-        const fast = purpleLike(na) || purpleLike(nb);
-        const subtle = na.isUpcoming && nb.isUpcoming;
+        const pa = isPlaceGraphNode(na);
+        const pb = isPlaceGraphNode(nb);
+        const placeEdge = pa || pb;
+        const naEv = !pa ? na : null;
+        const nbEv = !pb ? nb : null;
+        const fast =
+          naEv && nbEv ? purpleLike(naEv) || purpleLike(nbEv) : placeEdge || !!(naEv && purpleLike(naEv)) || !!(nbEv && purpleLike(nbEv));
+        const subtle = naEv?.isUpcoming && nbEv?.isUpcoming;
+        const stroke = subtle
+          ? 'rgba(255,255,255,0.08)'
+          : placeEdge
+            ? 'rgba(20,184,166,0.45)'
+            : 'rgba(124,58,237,0.4)';
         return (
           <line
             key={`e-${i}`}
@@ -66,7 +90,7 @@ function ProfileGraphBoard({
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke={subtle ? 'rgba(255,255,255,0.08)' : 'rgba(124,58,237,0.4)'}
+            stroke={stroke}
             strokeWidth={subtle ? 1 : 1.15}
             strokeDasharray={subtle ? '3 8' : '6 9'}
             strokeDashoffset={0}
@@ -77,6 +101,48 @@ function ProfileGraphBoard({
       })}
       {nodes.map((node, i) => {
         const p = positions[i];
+        const dur = 2 + (i % 3) * 0.35;
+        if (isPlaceGraphNode(node)) {
+          const r = 11 + Math.min(13, node.visitCount * 1.1 + node.people.length * 2);
+          const fill = '#0f766e';
+          const stroke = 'rgba(45,212,191,0.85)';
+          return (
+            <g
+              key={node.id}
+              transform={`translate(${p.x} ${p.y})`}
+              className="cursor-pointer"
+              onClick={() => onSelect(node)}
+            >
+              <g
+                className="animate-graph-node-breathe"
+                style={
+                  {
+                    '--breathe-delay': `${i * 0.45}s`,
+                    '--breathe-dur': `${dur}s`,
+                  } as CSSProperties
+                }
+              >
+                <polygon points={hexPoints(r + 5)} fill="transparent" />
+                <polygon
+                  points={hexPoints(r)}
+                  fill={fill}
+                  stroke={stroke}
+                  strokeWidth={2}
+                />
+                <text
+                  x={0}
+                  y={4}
+                  textAnchor="middle"
+                  fill="white"
+                  fontSize={node.shortLabel.length > 5 ? 8 : 10}
+                  fontWeight="600"
+                >
+                  {node.shortLabel}
+                </text>
+              </g>
+            </g>
+          );
+        }
         const r = 12 + Math.min(14, node.connectionCount * 3.5);
         const isUp = node.isUpcoming;
         const purple = node.connectionCount >= 2 && !isUp;
@@ -84,7 +150,6 @@ function ProfileGraphBoard({
         const fill = isUp ? 'transparent' : purple ? '#7c3aed' : blue ? '#3b82f6' : 'hsl(230, 15%, 22%)';
         const stroke = isUp ? '#6b7280' : 'rgba(255,255,255,0.15)';
         const dash = isUp ? '5 4' : undefined;
-        const dur = 2 + (i % 3) * 0.35;
         return (
           <g key={node.id} transform={`translate(${p.x} ${p.y})`} className="cursor-pointer" onClick={() => onSelect(node)}>
             <g
@@ -126,18 +191,31 @@ function ProfileGraphBoard({
 
 export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
   const { isAuthenticated, userName, userRole } = useAuth();
-  const { eventAcquaintances } = useAppState();
-  const [sheetNode, setSheetNode] = useState<GraphEventNodeData | null>(null);
+  const { eventAcquaintances, placeAcquaintances, placeVisitCounts } = useAppState();
+  const [sheetNode, setSheetNode] = useState<ProfileGraphNode | null>(null);
 
-  const mergedNodes = useMemo(
+  const mergedEventNodes = useMemo(
     () => mergeGraphNodesWithAcquaintances(graphProfileEventsMock, eventAcquaintances),
     [eventAcquaintances],
   );
 
-  const stats = useMemo(() => getGraphProfileStats(mergedNodes), [mergedNodes]);
+  const mergedPlaceNodes = useMemo(
+    () => mergePlaceGraphWithAcquaintances(graphProfilePlacesMock, placeAcquaintances, placeVisitCounts),
+    [placeAcquaintances, placeVisitCounts],
+  );
 
-  const cAtt = useCountUp(stats.attended, 800, isAuthenticated);
-  const cConn = useCountUp(stats.connections, 800, isAuthenticated);
+  const mergedNodes = useMemo(
+    () => buildCombinedProfileNodes(mergedEventNodes, mergedPlaceNodes),
+    [mergedEventNodes, mergedPlaceNodes],
+  );
+
+  const stats = useMemo(
+    () => getCombinedGraphStats(mergedEventNodes, mergedPlaceNodes),
+    [mergedEventNodes, mergedPlaceNodes],
+  );
+
+  const cSpots = useCountUp(stats.eventsAndPlaces, 800, isAuthenticated);
+  const cConn = useCountUp(stats.connectionsUnique, 800, isAuthenticated);
   const cUp = useCountUp(stats.upcoming, 800, isAuthenticated);
 
   const connections = useMemo(() => {
@@ -183,8 +261,9 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
         <div className="flex flex-col items-center">
           <ProfileGraphBoard nodes={mergedNodes} onSelect={(n) => setSheetNode(n)} />
           <p className="text-xs text-muted-foreground mt-2 text-center leading-relaxed">
-            <span className="text-foreground font-medium tabular-nums text-sm">{cAtt}</span> события ·{' '}
-            <span className="text-foreground font-medium tabular-nums text-sm">{cConn}</span> знакомств ·{' '}
+            <span className="text-foreground font-medium tabular-nums text-sm">{cSpots}</span> событий и
+            мест · <span className="text-foreground font-medium tabular-nums text-sm">{cConn}</span>{' '}
+            знакомств ·{' '}
             <span className="text-foreground font-medium tabular-nums text-sm">{cUp}</span> предстоящих
           </p>
           <h2 className="text-xl font-bold text-foreground mt-4">{userName}</h2>
@@ -239,8 +318,51 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
       )}
 
       <Sheet open={!!sheetNode} onOpenChange={(o) => !o && setSheetNode(null)}>
-        <SheetContent side="bottom" className="rounded-t-2xl bg-[#1e2130] border-border [&>button]:hidden pb-8">
-          {sheetNode && (
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="rounded-t-2xl bg-[#1e2130] border-border pb-8"
+        >
+          {sheetNode && isPlaceGraphNode(sheetNode) && (
+            <>
+              <SheetHeader className="text-left space-y-1 pr-8">
+                <SheetTitle className="text-lg">{sheetNode.fullTitle}</SheetTitle>
+              </SheetHeader>
+              <p className="text-sm text-teal-400/90 mt-3">
+                Ты был здесь <span className="font-semibold text-foreground">{sheetNode.visitCount}</span>{' '}
+                {sheetNode.visitCount === 1 ? 'раз' : sheetNode.visitCount < 5 ? 'раза' : 'раз'}
+              </p>
+              <p className="text-sm text-foreground mt-4">Познакомился с:</p>
+              <div className="mt-3 space-y-3">
+                {sheetNode.people.map((p) => (
+                  <div key={p.id} className="flex items-center gap-3">
+                    {p.avatarUrl ? (
+                      <img src={p.avatarUrl} alt={p.name} className="w-11 h-11 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-teal-500/30 flex items-center justify-center text-sm font-bold">
+                        {userInitials(p.name)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{p.role}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toast('Чат скоро появится')}
+                      className="text-sm font-semibold text-teal-400 shrink-0 transition-[transform,filter] duration-150 active:scale-[0.96]"
+                    >
+                      Написать
+                    </button>
+                  </div>
+                ))}
+                {sheetNode.people.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Пока никого не встретил здесь</p>
+                )}
+              </div>
+            </>
+          )}
+          {sheetNode && !isPlaceGraphNode(sheetNode) && (
             <>
               <SheetHeader className="text-left space-y-1 pr-8">
                 <SheetTitle className="text-lg">{sheetNode.fullTitle}</SheetTitle>

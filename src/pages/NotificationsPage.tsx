@@ -1,21 +1,36 @@
-import { onboardingNotifications } from '@/data/mockData';
+import { onboardingNotifications, placeNotificationsMock } from '@/data/mockData';
 import { useAppState } from '@/contexts/AppStateContext';
-import type { NotificationData } from '@/data/types';
+import type { NotificationData, NotificationKind } from '@/data/types';
 import { Bell } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface NotificationsPageProps {
-  /** FOMO: open match moment for event */
   onOpenMatch?: (eventId: string) => void;
+  onOpenMapPlace?: (placeId: string) => void;
+  onOpenPlaceSheet?: (placeId: string) => void;
+  onOpenPlaceMatch?: (placeId: string) => void;
 }
 
-export default function NotificationsPage({ onOpenMatch }: NotificationsPageProps) {
-  const { fomoNotifications, markNotificationRead } = useAppState();
+function isPlaceNotificationKind(k: NotificationKind | undefined): boolean {
+  return k === 'place_map' || k === 'place_sheet' || k === 'place_match';
+}
 
-  const all: NotificationData[] = useMemo(
-    () => [...fomoNotifications, ...onboardingNotifications],
-    [fomoNotifications],
-  );
+export default function NotificationsPage({
+  onOpenMatch,
+  onOpenMapPlace,
+  onOpenPlaceSheet,
+  onOpenPlaceMatch,
+}: NotificationsPageProps) {
+  const { fomoNotifications, markNotificationRead, isNotificationRead } = useAppState();
+
+  const all: NotificationData[] = useMemo(() => {
+    const merged = [...fomoNotifications, ...placeNotificationsMock, ...onboardingNotifications];
+    return merged.map((n) => ({
+      ...n,
+      isRead: isNotificationRead(n.id, n.isRead),
+    }));
+  }, [fomoNotifications, isNotificationRead]);
+
   const prevFirstRef = useRef<string | undefined>(undefined);
   const [springId, setSpringId] = useState<string | null>(null);
 
@@ -34,6 +49,28 @@ export default function NotificationsPage({ onOpenMatch }: NotificationsPageProp
     }
     prevFirstRef.current = first.id;
   }, [all]);
+
+  const handleRowClick = (notif: NotificationData) => {
+    if (notif.kind === 'fomo' && notif.eventId) {
+      markNotificationRead(notif.id);
+      onOpenMatch?.(notif.eventId);
+      return;
+    }
+    if (notif.kind === 'place_map' && notif.placeId) {
+      markNotificationRead(notif.id);
+      onOpenMapPlace?.(notif.placeId);
+      return;
+    }
+    if (notif.kind === 'place_sheet' && notif.placeId) {
+      markNotificationRead(notif.id);
+      onOpenPlaceSheet?.(notif.placeId);
+      return;
+    }
+    if (notif.kind === 'place_match' && notif.placeId) {
+      markNotificationRead(notif.id);
+      onOpenPlaceMatch?.(notif.placeId);
+    }
+  };
 
   if (all.length === 0) {
     return (
@@ -55,36 +92,42 @@ export default function NotificationsPage({ onOpenMatch }: NotificationsPageProp
       <div className="space-y-3">
         {all.map((notif, i) => {
           const isFomo = notif.kind === 'fomo';
+          const isPlace = isPlaceNotificationKind(notif.kind);
+          const isClickable = isFomo || isPlace;
           const isUnread = !notif.isRead;
           const isSpring = springId === notif.id;
           const iconIsFire = notif.icon === '🔥';
           return (
             <div
               key={notif.id}
-              role={isFomo ? 'button' : undefined}
-              tabIndex={isFomo ? 0 : undefined}
-              onClick={() => {
-                if (isFomo && notif.eventId) {
-                  markNotificationRead(notif.id);
-                  onOpenMatch?.(notif.eventId);
-                }
-              }}
+              role={isClickable ? 'button' : undefined}
+              tabIndex={isClickable ? 0 : undefined}
+              onClick={() => isClickable && handleRowClick(notif)}
               onKeyDown={(e) => {
-                if (isFomo && (e.key === 'Enter' || e.key === ' ')) {
+                if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
-                  if (notif.eventId) {
-                    markNotificationRead(notif.id);
-                    onOpenMatch?.(notif.eventId);
-                  }
+                  handleRowClick(notif);
                 }
               }}
               className={`w-full text-left glass rounded-xl p-4 flex items-start gap-3 ${
                 isSpring ? 'animate-notif-enter' : 'animate-fade-up'
               } ${
-                isFomo
-                  ? 'cursor-pointer border border-[#7c3aed]/25 hover:bg-[#7c3aed]/5 transition-[transform] duration-150 active:scale-[0.99]'
+                isClickable
+                  ? `cursor-pointer transition-[transform] duration-150 active:scale-[0.99] ${
+                      isPlace
+                        ? 'border border-teal-500/25 hover:bg-teal-500/5'
+                        : 'border border-[#7c3aed]/25 hover:bg-[#7c3aed]/5'
+                    }`
                   : ''
-              } ${isUnread ? 'border-l-[3px] border-l-[#7c3aed] bg-[#7c3aed]/10' : ''}`}
+              } ${
+                isUnread
+                  ? isFomo
+                    ? 'border-l-[3px] border-l-[#7c3aed] bg-[#7c3aed]/10'
+                    : isPlace
+                      ? 'border-l-[3px] border-l-teal-500 bg-teal-500/5'
+                      : 'border-l-[3px] border-l-muted'
+                  : ''
+              }`}
               style={{ animationDelay: isSpring ? undefined : `${i * 100}ms` }}
             >
               <span className={`text-xl shrink-0 ${iconIsFire ? 'inline-flex animate-icon-fire-intro' : ''}`}>
@@ -94,7 +137,13 @@ export default function NotificationsPage({ onOpenMatch }: NotificationsPageProp
                 <p className="text-sm text-foreground">{notif.text}</p>
                 <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
               </div>
-              {isUnread && <div className="w-2 h-2 rounded-full bg-[#7c3aed] mt-2 shrink-0" />}
+              {isUnread && (
+                <div
+                  className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
+                    isFomo ? 'bg-[#7c3aed]' : isPlace ? 'bg-teal-400' : 'bg-muted-foreground'
+                  }`}
+                />
+              )}
             </div>
           );
         })}
