@@ -414,24 +414,71 @@ export function isPlaceGraphNode(n: ProfileGraphNode): n is GraphPlaceNodeData {
   return (n as GraphPlaceNodeData).nodeType === 'place';
 }
 
+function shortLabelFromPlaceName(name: string, maxLen = 11): string {
+  const n = name.replace(/«|»/g, '').trim();
+  if (n.length <= maxLen) return n;
+  return `${n.slice(0, maxLen - 1)}…`;
+}
+
+function mergePeopleLists(baseList: PersonData[], added: PersonData[]): PersonData[] {
+  const merged = [...baseList];
+  const ids = new Set(merged.map((p) => p.id));
+  for (const p of added) {
+    if (!ids.has(p.id)) {
+      merged.push(p);
+      ids.add(p.id);
+    }
+  }
+  return merged;
+}
+
+/**
+ * Базовые узлы графа + чек-ины: если ты нажал «Я здесь» в месте, которого не было в моке узлов,
+ * добавляем шестиугольник из карточки города.
+ */
 export function mergePlaceGraphWithAcquaintances(
   base: GraphPlaceNodeData[],
   acc: Record<string, PersonData[]>,
   visitOverrides: Record<string, number>,
 ): GraphPlaceNodeData[] {
-  return base.map((node) => {
+  const merged = base.map((node) => {
     const added = acc[node.placeId] ?? [];
-    const mergedPeople = [...node.people];
-    const ids = new Set(mergedPeople.map((p) => p.id));
-    for (const p of added) {
-      if (!ids.has(p.id)) {
-        mergedPeople.push(p);
-        ids.add(p.id);
-      }
-    }
+    const mergedPeople = mergePeopleLists(node.people, added);
     const visitCount = Math.max(node.visitCount, visitOverrides[node.placeId] ?? 0);
     return { ...node, people: mergedPeople, visitCount };
   });
+
+  const inGraph = new Set(merged.map((n) => n.placeId));
+  const candidateIds = new Set<string>();
+  for (const [pid, count] of Object.entries(visitOverrides)) {
+    if (count > 0) candidateIds.add(pid);
+  }
+  for (const pid of Object.keys(acc)) {
+    if ((acc[pid]?.length ?? 0) > 0) candidateIds.add(pid);
+  }
+
+  const appended: GraphPlaceNodeData[] = [];
+  for (const pid of candidateIds) {
+    if (inGraph.has(pid)) continue;
+    const place = getPlaceById(pid);
+    if (!place) continue;
+    const vcRaw = visitOverrides[pid] ?? 0;
+    const added = acc[pid] ?? [];
+    if (vcRaw <= 0 && added.length === 0) continue;
+    const visitCount = vcRaw > 0 ? vcRaw : 1;
+    const people = mergePeopleLists(place.recentPeople, added);
+    appended.push({
+      nodeType: 'place',
+      id: `gp-${place.id}`,
+      shortLabel: shortLabelFromPlaceName(place.name),
+      fullTitle: place.name,
+      placeId: place.id,
+      visitCount,
+      people,
+    });
+  }
+
+  return [...merged, ...appended];
 }
 
 export function getCombinedGraphStats(

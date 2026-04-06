@@ -701,6 +701,50 @@
   transform-box: fill-box;
 }
 
+@keyframes graph-hub-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.animate-graph-hub-pulse {
+  animation: graph-hub-pulse 3.2s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@keyframes planetary-system-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-planetary-system-spin {
+  animation: planetary-system-spin 140s linear infinite;
+  transform-origin: 0 0;
+}
+
+.animate-planetary-system-spin-counter {
+  animation: planetary-system-spin 140s linear infinite reverse;
+  transform-origin: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-planetary-system-spin,
+  .animate-planetary-system-spin-counter {
+    animation: none;
+  }
+}
+
 @keyframes march-dash-fast {
   to {
     stroke-dashoffset: -32;
