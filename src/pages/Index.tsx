@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AppStateProvider } from '@/contexts/AppStateContext';
 import AuthSheet from '@/components/AuthSheet';
 import BottomNav from '@/components/BottomNav';
 import FeedPage from '@/pages/FeedPage';
@@ -25,30 +26,25 @@ const Index = () => {
     if (selectedEventId) {
       return <EventDetailPage eventId={selectedEventId} onBack={handleBack} />;
     }
-
     switch (activeTab) {
-      case 'feed':
-        return <FeedPage onEventClick={handleEventClick} />;
-      case 'map':
-        return <MapPage onEventClick={handleEventClick} />;
-      case 'myevents':
-        return <MyEventsPage onEventClick={handleEventClick} />;
-      case 'notifications':
-        return <NotificationsPage />;
-      case 'profile':
-        return <ProfilePage onNavigateToFeed={() => setActiveTab('feed')} />;
-      default:
-        return <FeedPage onEventClick={handleEventClick} />;
+      case 'feed': return <FeedPage onEventClick={handleEventClick} />;
+      case 'map': return <MapPage onEventClick={handleEventClick} />;
+      case 'myevents': return <MyEventsPage onEventClick={handleEventClick} />;
+      case 'notifications': return <NotificationsPage />;
+      case 'profile': return <ProfilePage onNavigateToFeed={() => setActiveTab('feed')} />;
+      default: return <FeedPage onEventClick={handleEventClick} />;
     }
   };
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-background">
-        {renderContent()}
-        <BottomNav activeTab={activeTab} onTabChange={(tab) => { setSelectedEventId(null); setActiveTab(tab); }} />
-        <AuthSheet />
-      </div>
+      <AppStateProvider>
+        <div className="min-h-screen bg-background">
+          {renderContent()}
+          <BottomNav activeTab={activeTab} onTabChange={(tab) => { setSelectedEventId(null); setActiveTab(tab); }} />
+          <AuthSheet />
+        </div>
+      </AppStateProvider>
     </AuthProvider>
   );
 };
