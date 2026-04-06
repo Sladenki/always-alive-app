@@ -1,80 +1,70 @@
 import { mockEvents, getInterestCount } from '@/data/mockData';
 import { Flame } from 'lucide-react';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface MapPageProps {
   onEventClick: (id: string) => void;
 }
 
+const CENTER: [number, number] = [54.7104, 20.4810];
+
 export default function MapPage({ onEventClick }: MapPageProps) {
   return (
     <div className="relative h-[calc(100vh-60px)] w-full overflow-hidden">
-      {/* Stylized map background */}
-      <div className="absolute inset-0 bg-[hsl(230,25%,9%)]">
-        {/* Grid lines to simulate map */}
-        <div className="absolute inset-0 opacity-10">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={`h${i}`} className="absolute w-full h-px bg-foreground" style={{ top: `${i * 5}%` }} />
-          ))}
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={`v${i}`} className="absolute h-full w-px bg-foreground" style={{ left: `${i * 5}%` }} />
-          ))}
-        </div>
-        {/* Water areas */}
-        <div className="absolute w-32 h-20 rounded-full bg-primary/5 top-[20%] left-[15%] rotate-12" />
-        <div className="absolute w-48 h-16 rounded-full bg-primary/5 top-[60%] left-[40%] -rotate-6" />
+      <MapContainer
+        center={CENTER}
+        zoom={13}
+        scrollWheelZoom={true}
+        className="h-full w-full z-0"
+        style={{ background: 'hsl(230, 25%, 9%)' }}
+        attributionControl={false}
+      >
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
+        {mockEvents.map((event) => {
+          const interest = getInterestCount(event);
+          const isHot = event.temperature === 'hot';
+          const isWarm = event.temperature === 'warm';
+          const color = isHot ? '#e8622c' : isWarm ? '#d4921a' : '#64748b';
 
-        {/* City label */}
-        <div className="absolute top-[8%] left-1/2 -translate-x-1/2">
-          <p className="text-xs text-muted-foreground/40 tracking-[0.3em] uppercase">Калининград</p>
-        </div>
-      </div>
+          return (
+            <CircleMarker
+              key={event.id}
+              center={[event.lat, event.lng]}
+              radius={isHot ? 14 : isWarm ? 10 : 7}
+              pathOptions={{
+                fillColor: color,
+                fillOpacity: 0.7,
+                color: color,
+                weight: 2,
+                opacity: 0.9,
+              }}
+              eventHandlers={{ click: () => onEventClick(event.id) }}
+            >
+              <Popup className="dark-popup">
+                <div className="text-sm font-semibold">{event.title}</div>
+                <div className="text-xs opacity-70">{event.time} · {interest} чел.</div>
+              </Popup>
+            </CircleMarker>
+          );
+        })}
+      </MapContainer>
 
-      {/* Event dots */}
-      {mockEvents.map((event, i) => {
-        const interest = getInterestCount(event);
-        const x = 15 + (i * 12) % 70;
-        const y = 20 + ((i * 17 + 5) % 55);
-        const isHot = event.temperature === 'hot';
-        const isWarm = event.temperature === 'warm';
-
-        return (
-          <button
-            key={event.id}
-            onClick={() => onEventClick(event.id)}
-            className="absolute group"
-            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-          >
-            {/* Pulse ring */}
-            <div className={`absolute inset-0 w-10 h-10 -translate-x-1/2 -translate-y-1/2 rounded-full animate-pulse-dot ${
-              isHot ? 'bg-hot/30' : isWarm ? 'bg-primary/30' : 'bg-muted-foreground/20'
-            }`} />
-            {/* Dot */}
-            <div className={`relative w-4 h-4 rounded-full border-2 ${
-              isHot ? 'bg-hot border-hot/50 shadow-[0_0_12px_hsl(var(--hot)/0.5)]'
-              : isWarm ? 'bg-primary border-primary/50 shadow-[0_0_8px_hsl(var(--primary)/0.3)]'
-              : 'bg-muted-foreground border-muted-foreground/50'
-            }`}>
-              {isHot && <Flame className="absolute -top-3 -right-3 w-3 h-3 text-hot" />}
-            </div>
-            {/* Tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 glass-strong rounded-lg px-3 py-2 min-w-[140px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
-              <p className="text-[10px] text-muted-foreground">{event.time} · {interest} чел.</p>
-            </div>
-          </button>
-        );
-      })}
-
-      {/* Bottom event preview strip */}
-      <div className="absolute bottom-16 left-0 right-0 px-4">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+      {/* Bottom event strip */}
+      <div className="absolute bottom-16 left-0 right-0 px-4 z-[1000]">
+        <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
           {mockEvents.slice(0, 4).map((event) => (
             <button
               key={event.id}
               onClick={() => onEventClick(event.id)}
               className="glass-strong rounded-xl p-3 min-w-[200px] shrink-0 text-left"
             >
-              <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                {event.temperature === 'hot' && <Flame className="w-3 h-3 text-hot" />}
+                <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
+              </div>
               <p className="text-[10px] text-muted-foreground">{event.time} · {event.location}</p>
             </button>
           ))}
