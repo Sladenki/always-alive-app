@@ -1,4 +1,10 @@
-import { EventData, NotificationData, PersonData } from './types';
+import {
+  EventData,
+  GraphEventNodeData,
+  MatchPersonData,
+  NotificationData,
+  PersonData,
+} from './types';
 
 const realPeople: PersonData[] = [
   { id: 'p1', name: 'Алина К.', role: 'Студентка БФУ', avatarUrl: 'https://i.pravatar.cc/150?img=1' },
@@ -140,10 +146,120 @@ export const mockEvents: EventData[] = [
 ];
 
 export const onboardingNotifications: NotificationData[] = [
-  { id: 'n1', icon: '👋', text: 'Добро пожаловать в Nexus — твой город живёт здесь', time: 'сейчас', isRead: false },
-  { id: 'n2', icon: '🔥', text: 'Сегодня 3 популярных события рядом с тобой', time: '1 мин', isRead: false },
-  { id: 'n3', icon: '📍', text: 'Открой карту и посмотри что происходит', time: '2 мин', isRead: false },
+  { id: 'n1', icon: '👋', text: 'Добро пожаловать в Nexus — твой город живёт здесь', time: 'сейчас', isRead: false, kind: 'onboarding' },
+  { id: 'n2', icon: '🔥', text: 'Сегодня 3 популярных события рядом с тобой', time: '1 мин', isRead: false, kind: 'onboarding' },
+  { id: 'n3', icon: '📍', text: 'Открой карту и посмотри что происходит', time: '2 мин', isRead: false, kind: 'onboarding' },
 ];
+
+/** Demo match partner for any «Совпадение» flow */
+export const demoMatchPerson: MatchPersonData = {
+  id: 'gx-alina',
+  name: 'Алина',
+  subtitle: 'КГТУ · 2 курс',
+  bio: 'Дизайнер, люблю джаз и кофе',
+  initials: 'А',
+};
+
+const gpAlina: PersonData = { id: 'gx-alina', name: 'Алина', role: 'Дизайн', avatarUrl: 'https://i.pravatar.cc/150?img=1' };
+const gpMaxim: PersonData = { id: 'gx-maxim', name: 'Максим', role: 'Dev', avatarUrl: 'https://i.pravatar.cc/150?img=3' };
+const gpKatya: PersonData = { id: 'gx-katya', name: 'Катя', role: 'Студентка', avatarUrl: 'https://i.pravatar.cc/150?img=5' };
+const gpDima: PersonData = { id: 'gx-dima', name: 'Дима', role: 'Бэкенд', avatarUrl: 'https://i.pravatar.cc/150?img=7' };
+const gpSonya: PersonData = { id: 'gx-sonya', name: 'Соня', role: 'Маркетинг', avatarUrl: 'https://i.pravatar.cc/150?img=9' };
+
+/** Profile graph: attended + upcoming (mock). Sizes / colors derived in UI from connectionCount + isUpcoming */
+export const graphProfileEventsMock: GraphEventNodeData[] = [
+  {
+    id: 'g-jazz',
+    shortLabel: 'Джаз',
+    fullTitle: 'Джазовый вечер',
+    dateLabel: '12 марта · 19:00',
+    connectionCount: 2,
+    isUpcoming: false,
+    feedEventIds: ['e3'],
+    people: [gpAlina, gpMaxim],
+  },
+  {
+    id: 'g-hack',
+    shortLabel: 'Хакатон',
+    fullTitle: 'Хакатон Kaliningrad.tech',
+    dateLabel: '2 апреля · 10:00',
+    connectionCount: 2,
+    isUpcoming: false,
+    feedEventIds: ['e2'],
+    people: [gpKatya, gpDima],
+  },
+  {
+    id: 'g-tedx',
+    shortLabel: 'TEDx',
+    fullTitle: 'TEDx Kaliningrad',
+    dateLabel: '20 марта · 18:00',
+    connectionCount: 1,
+    isUpcoming: false,
+    feedEventIds: ['e6'],
+    people: [gpSonya],
+  },
+  {
+    id: 'g-workshop',
+    shortLabel: 'Воркшоп',
+    fullTitle: 'Воркшоп по дизайну',
+    dateLabel: 'Завтра · 14:00',
+    connectionCount: 0,
+    isUpcoming: true,
+    feedEventIds: ['e4'],
+    people: [],
+  },
+  {
+    id: 'g-lecture',
+    shortLabel: 'Лекция',
+    fullTitle: 'Лекция о нейросетях',
+    dateLabel: 'Суббота · 16:00',
+    connectionCount: 0,
+    isUpcoming: true,
+    feedEventIds: ['e7'],
+    people: [],
+  },
+];
+
+export function getMatchTagLine(event: EventData): string {
+  return `${event.title} · ${event.date} ${event.time}`;
+}
+
+/** Short label for the center node in the triangle graph */
+export function getEventCenterNodeLabel(event: EventData): string {
+  const t = event.title;
+  if (t.length <= 14) return t;
+  return `${t.slice(0, 12)}…`;
+}
+
+export function getMatchPersonForEvent(_eventId: string): MatchPersonData {
+  return demoMatchPerson;
+}
+
+export function getGraphProfileStats(nodes: GraphEventNodeData[]) {
+  const attended = nodes.filter(n => !n.isUpcoming).length;
+  const upcoming = nodes.filter(n => n.isUpcoming).length;
+  const connections = nodes.reduce((s, n) => s + n.connectionCount, 0);
+  return { attended, upcoming, connections, eventsTotal: nodes.length };
+}
+
+export function mergeGraphNodesWithAcquaintances(
+  base: GraphEventNodeData[],
+  acc: Record<string, PersonData[]>,
+): GraphEventNodeData[] {
+  return base.map((node) => {
+    const added = node.feedEventIds.flatMap((fid) => acc[fid] ?? []);
+    const mergedPeople = [...node.people];
+    const ids = new Set(mergedPeople.map((p) => p.id));
+    for (const p of added) {
+      if (!ids.has(p.id)) {
+        mergedPeople.push(p);
+        ids.add(p.id);
+      }
+    }
+    const connectionCount = Math.max(node.connectionCount, mergedPeople.length);
+    return { ...node, people: mergedPeople, connectionCount };
+  });
+}
 
 export function getInterestCount(event: EventData): number {
   return Math.max(event.views + event.realSignups, 7);

@@ -4,16 +4,25 @@ import PersonCard from '@/components/PersonCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
 import { ArrowLeft, MapPin, Clock, Eye, Flame, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface EventDetailPageProps {
   eventId: string;
   onBack: () => void;
+  /** After successful «Я иду» — show match moment (prototype) */
+  onMatchOpen?: (eventId: string) => void;
 }
 
-export default function EventDetailPage({ eventId, onBack }: EventDetailPageProps) {
+function initials(name: string): string {
+  const p = name.trim().split(/\s+/);
+  if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventDetailPageProps) {
   const event = mockEvents.find(e => e.id === eventId);
   const { requestAuth, isAuthenticated } = useAuth();
-  const { signUpForEvent, isSignedUp } = useAppState();
+  const { signUpForEvent, isSignedUp, getAcquaintancesForEvent } = useAppState();
 
   if (!event) return null;
 
@@ -26,12 +35,15 @@ export default function EventDetailPage({ eventId, onBack }: EventDetailPageProp
     ? `👀 ${interest} человек смотрят это событие. Будь первым кто запишется.`
     : null;
 
+  const acquaintances = getAcquaintancesForEvent(event.id);
+
   const handleSignUp = () => {
     if (!isAuthenticated) {
       requestAuth('Чтобы записаться — войди за 10 секунд');
       return;
     }
     signUpForEvent(event.id);
+    onMatchOpen?.(event.id);
   };
 
   return (
@@ -62,6 +74,32 @@ export default function EventDetailPage({ eventId, onBack }: EventDetailPageProp
       )}
 
       <div className="px-4 pt-4 space-y-4 animate-fade-up">
+        {acquaintances.length > 0 && (
+          <div className="rounded-xl border border-[#7c3aed]/35 bg-[#7c3aed]/10 p-4 space-y-3">
+            <h3 className="text-foreground font-semibold text-sm">Ваши знакомства на этом событии</h3>
+            <div className="space-y-2">
+              {acquaintances.map((p) => (
+                <div key={p.id} className="flex items-center gap-3">
+                  <div className="w-[52px] h-[52px] rounded-full bg-[#7c3aed]/40 flex items-center justify-center text-base font-bold text-white">
+                    {initials(p.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate">{p.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{p.role}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toast('Чат скоро появится')}
+                    className="text-sm font-semibold text-[#7c3aed] shrink-0 active:scale-[0.97] transition-transform"
+                  >
+                    Написать
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
           <span className="text-sm">{event.category}</span>
           <h1 className="text-2xl font-bold text-foreground">{event.title}</h1>

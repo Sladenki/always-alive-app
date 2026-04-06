@@ -142,3 +142,109 @@
 .delay-200 { animation-delay: 200ms; }
 .delay-300 { animation-delay: 300ms; }
 .delay-400 { animation-delay: 400ms; }
+
+/* Match moment — graph line draw */
+@keyframes match-line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes match-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes connection-avatar-in-left {
+  from {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes connection-avatar-in-right {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes connection-pulse-once {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes connection-event-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes connection-line-reveal {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-match-line {
+  animation: match-line-draw 0.8s ease-out forwards;
+}
+
+.match-tri-line {
+  stroke-dasharray: 8 6;
+  stroke-dashoffset: 96;
+  animation: match-line-draw 0.8s ease-out forwards;
+}
+
+.match-tri-line--d1 {
+  animation-delay: 0.1s;
+}
+
+.match-tri-line--d2 {
+  animation-delay: 0.22s;
+}
+
+.animate-connection-left {
+  animation: connection-avatar-in-left 0.55s ease-out forwards;
+}
+
+.animate-connection-right {
+  animation: connection-avatar-in-right 0.55s ease-out forwards;
+}
+
+.animate-connection-pulse {
+  animation: connection-pulse-once 0.45s ease-out 0.55s forwards;
+}
+
+.animate-connection-event-pop {
+  animation: connection-event-pop 0.4s ease-out 0.5s both;
+}
+
+.animate-connection-line {
+  animation: connection-line-reveal 0.45s ease-out 0.85s both;
+}
