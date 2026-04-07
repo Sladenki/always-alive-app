@@ -134,6 +134,15 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
 
   const { signUpForEvent, isSignedUp, getPlaceVisitCount, placeVisitCounts } = useAppState();
   const { requestAuth, isAuthenticated } = useAuth();
+  const loc = useLocation();
+
+  // Track map opens
+  useEffect(() => {
+    loc.incrementMapOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const userPosMarkerIcon = useMemo(() => userPosIcon(), []);
 
   const iconById = useMemo(() => {
     const m: Record<string, L.DivIcon> = {};
