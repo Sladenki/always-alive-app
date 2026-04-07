@@ -1,6 +1,6 @@
 import { mockEvents, getInterestCount, mockPlaces, getPlaceById } from '@/data/mockData';
 import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useState } from 'react';
@@ -25,6 +25,18 @@ interface MapPageProps {
 }
 
 const CENTER: [number, number] = [54.7104, 20.481];
+
+interface Landmark {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+const LANDMARKS: Landmark[] = [
+  { id: 'kant-island', name: 'Остров Канта', lat: 54.7067, lng: 20.5115 },
+  { id: 'city-center', name: 'Центр города', lat: 54.7198, lng: 20.5036 },
+];
 
 function sonarDivIcon(event: EventData, index: number) {
   const isHot = event.temperature === 'hot';
@@ -61,6 +73,19 @@ function placeMarkerIcon(place: CityPlaceData, visitCount: number) {
     className: 'map-marker-wrap',
     iconSize: [46, 46],
     iconAnchor: [23, 23],
+  });
+}
+
+function landmarkIcon() {
+  const html = `
+<div style="position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px">
+  <div style="width:12px;height:12px;border-radius:9999px;background:#facc15;border:2px solid #1f2937;box-shadow:0 0 0 2px rgba(250,204,21,0.25)"></div>
+</div>`;
+  return L.divIcon({
+    html,
+    className: 'map-marker-wrap',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
   });
 }
 
@@ -107,6 +132,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
     });
     return m;
   }, [placeVisitCounts]);
+  const orientationLandmarkIcon = useMemo(() => landmarkIcon(), []);
 
   useEffect(() => {
     if (!mapIntent?.placeId) return;
@@ -179,8 +205,34 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         style={{ background: 'hsl(230, 25%, 9%)' }}
         attributionControl={false}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        <TileLayer 
+        // url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" 
+        url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+        />
         <MapFlyTo center={flyCenter} />
+        {LANDMARKS.map((landmark) => (
+          <Marker
+            key={landmark.id}
+            position={[landmark.lat, landmark.lng]}
+            icon={orientationLandmarkIcon}
+            zIndexOffset={700}
+            eventHandlers={{
+              click: () => {
+                setFlyCenter([landmark.lat, landmark.lng]);
+              },
+            }}
+          >
+            <Tooltip
+              permanent
+              direction="top"
+              offset={[0, -10]}
+              opacity={0.95}
+              className="!bg-[#111827]/90 !text-white !border !border-white/20 !rounded-md !px-2 !py-1 !text-[11px] !font-semibold"
+            >
+              {landmark.name}
+            </Tooltip>
+          </Marker>
+        ))}
         {mapMode === 'events' &&
           mockEvents.map((event) => (
             <Marker
