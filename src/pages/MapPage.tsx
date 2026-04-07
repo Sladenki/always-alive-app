@@ -1,12 +1,13 @@
 import { mockEvents, getInterestCount, mockPlaces, getPlaceById } from '@/data/mockData';
-import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
+import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish, Bug } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAppState } from '@/contexts/AppStateContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from '@/contexts/LocationContext';
 import type { EventData, CityPlaceData } from '@/data/types';
 import { interestNumberClass } from '@/lib/interestText';
 import PlaceCheckInFlowOverlay from '@/components/PlaceCheckInFlowOverlay';
@@ -97,6 +98,24 @@ function MapFlyTo({ center }: { center: [number, number] | null }) {
   return null;
 }
 
+/** Dev mode: click map to set simulated position */
+function DevMapClickHandler() {
+  const { devMode, devSetPosition } = useLocation();
+  useMapEvents({
+    click(e) {
+      if (devMode) {
+        devSetPosition(e.latlng.lat, e.latlng.lng);
+      }
+    },
+  });
+  return null;
+}
+
+function userPosIcon() {
+  const html = `<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 12px rgba(59,130,246,0.6)"></div>`;
+  return L.divIcon({ html, className: 'map-marker-wrap', iconSize: [16, 16], iconAnchor: [8, 8] });
+}
+
 function categoryPlaceIcon(cat: string) {
   const c = cat.toLowerCase();
   if (c.includes('кофейн') || c.includes('антикафе')) return Coffee;
@@ -115,6 +134,15 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
 
   const { signUpForEvent, isSignedUp, getPlaceVisitCount, placeVisitCounts } = useAppState();
   const { requestAuth, isAuthenticated } = useAuth();
+  const loc = useLocation();
+
+  // Track map opens
+  useEffect(() => {
+    loc.incrementMapOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const userPosMarkerIcon = useMemo(() => userPosIcon(), []);
 
   const iconById = useMemo(() => {
     const m: Record<string, L.DivIcon> = {};
@@ -210,6 +238,10 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         />
         <MapFlyTo center={flyCenter} />
+        <DevMapClickHandler />
+        {loc.currentPos && (
+          <Marker position={loc.currentPos} icon={userPosMarkerIcon} zIndexOffset={900} />
+        )}
         {LANDMARKS.map((landmark) => (
           <Marker
             key={landmark.id}
@@ -418,6 +450,21 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
           onClose={() => setCheckIn(null)}
         />
       )}
+
+      {/* Dev mode toggle */}
+      <button
+        type="button"
+        onClick={() => loc.setDevMode(!loc.devMode)}
+        className={cn(
+          'absolute bottom-20 right-3 z-[1100] w-9 h-9 rounded-xl flex items-center justify-center transition-colors',
+          loc.devMode
+            ? 'bg-violet-600 text-white'
+            : 'bg-card/80 border border-border text-muted-foreground',
+        )}
+        title="Dev Mode"
+      >
+        <Bug className="w-4 h-4" />
+      </button>
     </div>
   );
 }
