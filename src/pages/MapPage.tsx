@@ -450,6 +450,21 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
           onClose={() => setCheckIn(null)}
         />
       )}
+
+      {/* Dev mode toggle */}
+      <button
+        type="button"
+        onClick={() => loc.setDevMode(!loc.devMode)}
+        className={cn(
+          'absolute bottom-20 right-3 z-[1100] w-9 h-9 rounded-xl flex items-center justify-center transition-colors',
+          loc.devMode
+            ? 'bg-violet-600 text-white'
+            : 'bg-card/80 border border-border text-muted-foreground',
+        )}
+        title="Dev Mode"
+      >
+        <Bug className="w-4 h-4" />
+      </button>
     </div>
   );
 }
