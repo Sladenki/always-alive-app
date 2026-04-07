@@ -1,12 +1,13 @@
 import { mockEvents, getInterestCount, mockPlaces, getPlaceById } from '@/data/mockData';
-import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
+import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish, Bug } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAppState } from '@/contexts/AppStateContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from '@/contexts/LocationContext';
 import type { EventData, CityPlaceData } from '@/data/types';
 import { interestNumberClass } from '@/lib/interestText';
 import PlaceCheckInFlowOverlay from '@/components/PlaceCheckInFlowOverlay';
