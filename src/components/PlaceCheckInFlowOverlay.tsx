@@ -26,7 +26,7 @@ function userInitials(name: string): string {
 
 function PlaceAddedGraphAnim({ placeShort, userLabel }: { placeShort: string; userLabel: string }) {
   return (
-    <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0f1117]/96 px-5">
+    <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0f1117] px-5">
       <div className="relative w-full max-w-sm rounded-3xl border border-teal-500/20 bg-[#14161f]/95 px-4 py-10 shadow-[0_0_60px_rgba(20,184,166,0.12)]">
         <p className="text-center text-xs uppercase tracking-[0.2em] text-teal-500/80 mb-6">Новая точка графа</p>
         <svg viewBox="0 0 320 160" className="w-full h-40" aria-hidden>

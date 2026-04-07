@@ -340,7 +340,7 @@ export default function MatchFlowOverlay({ event, open, onClose }: MatchFlowOver
       )}
 
       {phase === 'wait' && (
-        <div className="fixed inset-0 z-[105] flex items-center justify-center bg-[#0f1117]/92 px-6">
+        <div className="fixed inset-0 z-[105] flex items-center justify-center bg-[#0f1117] px-6">
           <p className="text-sm text-muted-foreground">Ожидаем ответ…</p>
         </div>
       )}

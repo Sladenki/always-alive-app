@@ -348,7 +348,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
       )}
 
       {phase === 'wait' && (
-        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0f1117]/92 px-6 gap-3 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0f1117] px-6 gap-3 animate-in fade-in duration-300">
           <div className="flex gap-1.5">
             {[0, 1, 2].map((i) => (
               <span
@@ -393,7 +393,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
       )}
 
       {phase === 'share' && (
-        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-black/82 px-4 py-8 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0a0c12] px-4 py-8 animate-in fade-in duration-500">
           <div className="w-full max-w-sm space-y-2 mb-4 text-center">
             <p className="text-teal-400/90 text-xs font-medium uppercase tracking-wide">Готово</p>
             <h3 className="text-lg font-bold text-white leading-tight">
