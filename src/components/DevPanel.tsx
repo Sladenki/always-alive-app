@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { Bug, MapPin, Zap, ChevronDown, ChevronUp, Crosshair } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Bug, MapPin, Route, Zap, ChevronDown, ChevronUp, Crosshair } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
+import { buildDayRouteStory, formatStopTime, sortStopsByTime } from '@/lib/dayRoute';
 import { cn } from '@/lib/utils';
 
 export default function DevPanel() {
   const loc = useLocation();
   const [expanded, setExpanded] = useState(false);
+
+  /** Хронология дня — хуки всегда до любого return (devMode) */
+  const routeStops = useMemo(() => sortStopsByTime(loc.todayStops), [loc.todayStops]);
+  const routeStory = useMemo(() => buildDayRouteStory(routeStops), [routeStops]);
 
   if (!loc.devMode) return null;
 
@@ -60,6 +65,29 @@ export default function DevPanel() {
             </div>
           </div>
 
+          {/* Маршрут дня (по времени) */}
+          {routeStops.length > 0 && (
+            <div>
+              <p className="text-muted-foreground mb-1 flex items-center gap-1">
+                <Route className="w-3 h-3" /> Маршрут за день
+              </p>
+              <p className="text-[10px] leading-relaxed text-foreground/90 rounded-lg bg-white/5 border border-white/10 p-2 mb-2">
+                {routeStory}
+              </p>
+              <ol className="max-h-32 overflow-y-auto space-y-1.5 pl-4 list-decimal text-[10px] marker:text-violet-400">
+                {routeStops.map((s) => (
+                  <li key={s.id} className="pl-0.5">
+                    <span className="font-medium text-foreground">{s.label}</span>
+                    <span className="text-muted-foreground">
+                      {' '}
+                      · {formatStopTime(s.startTime)} · ~{s.durationMin} мин
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           {/* Stops */}
           <div>
             <p className="text-muted-foreground mb-1 flex items-center gap-1">
@@ -108,7 +136,7 @@ export default function DevPanel() {
           </div>
 
           <p className="text-[10px] text-muted-foreground/60 text-center">
-            Кликайте по карте чтобы задать позицию
+            Кликайте по карте чтобы задать позицию. Маршрут виден на вкладке «Карта».
           </p>
         </div>
       )}

@@ -1,6 +1,14 @@
 import { mockEvents, getInterestCount, mockPlaces, getPlaceById } from '@/data/mockData';
-import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish, Bug } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish, Bug, Route } from 'lucide-react';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Tooltip,
+  Polyline,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,8 +18,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import type { EventData, CityPlaceData } from '@/data/types';
 import { interestNumberClass } from '@/lib/interestText';
+import DayHistorySheet from '@/components/DayHistorySheet';
 import PlaceCheckInFlowOverlay from '@/components/PlaceCheckInFlowOverlay';
 import { buildPlaceMarkerHtml } from '@/lib/placeMarkerHtml';
+import { sortStopsByTime } from '@/lib/dayRoute';
 import { cn } from '@/lib/utils';
 
 export interface MapIntent {
@@ -90,6 +100,18 @@ function landmarkIcon() {
   });
 }
 
+/** Номер шага на линии маршрута дня */
+function routeStepIcon(step: number) {
+  const html = `
+<div style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:9999px;background:#7c3aed;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 10px rgba(124,58,237,0.5);font-size:11px;font-weight:700;color:#fff">${step}</div>`;
+  return L.divIcon({
+    html,
+    className: 'map-marker-wrap',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
+
 function MapFlyTo({ center }: { center: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
@@ -131,6 +153,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [flyCenter, setFlyCenter] = useState<[number, number] | null>(null);
   const [checkIn, setCheckIn] = useState<{ place: CityPlaceData; live: boolean } | null>(null);
+  const [dayHistoryOpen, setDayHistoryOpen] = useState(false);
 
   const { signUpForEvent, isSignedUp, getPlaceVisitCount, placeVisitCounts } = useAppState();
   const { requestAuth, isAuthenticated } = useAuth();
@@ -161,6 +184,16 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
     return m;
   }, [placeVisitCounts]);
   const orientationLandmarkIcon = useMemo(() => landmarkIcon(), []);
+
+  const dayRoute = useMemo(() => {
+    const sorted = sortStopsByTime(loc.todayStops);
+    const positions = sorted.map((s) => [s.lat, s.lng] as [number, number]);
+    return { sorted, positions };
+  }, [loc.todayStops]);
+
+  const routeStepIcons = useMemo(() => {
+    return dayRoute.sorted.map((_, i) => routeStepIcon(i + 1));
+  }, [dayRoute.sorted]);
 
   useEffect(() => {
     if (!mapIntent?.placeId) return;
@@ -239,6 +272,21 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         />
         <MapFlyTo center={flyCenter} />
         <DevMapClickHandler />
+        {dayRoute.positions.length >= 2 && (
+          <Polyline
+            positions={dayRoute.positions}
+            pathOptions={{
+              color: '#a78bfa',
+              weight: 4,
+              opacity: 0.88,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+        )}
+        {dayRoute.sorted.map((s, i) => (
+          <Marker key={s.id} position={[s.lat, s.lng]} icon={routeStepIcons[i]} zIndexOffset={850} />
+        ))}
         {loc.currentPos && (
           <Marker position={loc.currentPos} icon={userPosMarkerIcon} zIndexOffset={900} />
         )}
@@ -294,6 +342,32 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
             />
           ))}
       </MapContainer>
+
+      {loc.todayStops.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setDayHistoryOpen(true)}
+          className="absolute bottom-[7.25rem] left-3 z-[1100] flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-2xl bg-[#1e2130]/95 border border-violet-500/30 text-violet-200 text-xs font-semibold shadow-lg backdrop-blur-md pointer-events-auto active:scale-[0.98] transition-transform"
+        >
+          <Route className="w-4 h-4 shrink-0 text-violet-400" />
+          История дня
+        </button>
+      )}
+
+      <Sheet open={dayHistoryOpen} onOpenChange={setDayHistoryOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          overlayClassName="z-[2100]"
+          className="z-[2100] max-h-[82vh] overflow-y-auto max-w-md mx-auto left-0 right-0 rounded-t-3xl bg-[#161a28] border border-white/[0.06] pb-28 pt-2 data-[state=open]:!animate-none shadow-[0_-20px_60px_rgba(0,0,0,0.45)]"
+        >
+          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" aria-hidden />
+          <SheetHeader className="sr-only">
+            <SheetTitle>История дня</SheetTitle>
+          </SheetHeader>
+          <DayHistorySheet sorted={dayRoute.sorted} />
+        </SheetContent>
+      </Sheet>
 
       <div className="absolute bottom-16 left-0 right-0 px-4 z-[1000]">
         <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>

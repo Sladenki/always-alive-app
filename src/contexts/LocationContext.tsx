@@ -240,6 +240,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         status: 'pending',
       });
     }
+    stops.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
     setTodayStops(stops);
     setShowEveningRecall(true);
   }, []);

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Moon, Check, X, Smile } from 'lucide-react';
 import { useLocation, type DetectedStop } from '@/contexts/LocationContext';
+import { buildDayRouteStory, sortStopsByTime } from '@/lib/dayRoute';
 import { cn } from '@/lib/utils';
 
 const MOODS = ['😊', '☕', '🎵', '💪', '🤝', '🌙'] as const;
@@ -100,6 +101,11 @@ export default function EveningRecallOverlay() {
   const { todayStops, showEveningRecall, setShowEveningRecall, confirmStop, dismissStop } =
     useLocation();
 
+  const routeStory = useMemo(
+    () => (todayStops.length === 0 ? '' : buildDayRouteStory(sortStopsByTime(todayStops))),
+    [todayStops],
+  );
+
   if (!showEveningRecall || todayStops.length === 0) return null;
 
   const pending = todayStops.filter((s) => s.status === 'pending');
@@ -120,6 +126,11 @@ export default function EveningRecallOverlay() {
             ? `Готово! ${confirmed.length} мест сохранено`
             : `${pending.length} мест ожидают подтверждения`}
         </p>
+        {routeStory && (
+          <p className="text-xs text-muted-foreground mt-4 text-left max-w-md mx-auto leading-relaxed rounded-xl bg-white/5 border border-white/10 p-3">
+            {routeStory}
+          </p>
+        )}
       </div>
 
       {/* Cards */}
