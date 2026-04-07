@@ -98,6 +98,24 @@ function MapFlyTo({ center }: { center: [number, number] | null }) {
   return null;
 }
 
+/** Dev mode: click map to set simulated position */
+function DevMapClickHandler() {
+  const { devMode, devSetPosition } = useLocation();
+  useMapEvents({
+    click(e) {
+      if (devMode) {
+        devSetPosition(e.latlng.lat, e.latlng.lng);
+      }
+    },
+  });
+  return null;
+}
+
+function userPosIcon() {
+  const html = `<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 12px rgba(59,130,246,0.6)"></div>`;
+  return L.divIcon({ html, className: 'map-marker-wrap', iconSize: [16, 16], iconAnchor: [8, 8] });
+}
+
 function categoryPlaceIcon(cat: string) {
   const c = cat.toLowerCase();
   if (c.includes('кофейн') || c.includes('антикафе')) return Coffee;
