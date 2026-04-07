@@ -1,11 +1,16 @@
 import { useCallback, useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
+import { LocationProvider } from '@/contexts/LocationContext';
 import AuthSheet from '@/components/AuthSheet';
 import BottomNav from '@/components/BottomNav';
 import MatchFlowOverlay from '@/components/MatchFlowOverlay';
 import PlaceMatchFlowOverlay from '@/components/PlaceMatchFlowOverlay';
 import OpeningSplash from '@/components/OpeningSplash';
+import DevPanel from '@/components/DevPanel';
+import EveningRecallOverlay from '@/components/EveningRecallOverlay';
+import SmartModePrompt from '@/components/SmartModePrompt';
+import PlaceSuggestionToast from '@/components/PlaceSuggestionToast';
 import FeedPage from '@/pages/FeedPage';
 import MapPage, { type MapIntent } from '@/pages/MapPage';
 import EventDetailPage from '@/pages/EventDetailPage';
@@ -103,34 +108,40 @@ const Index = () => {
   return (
     <AuthProvider>
       <AppStateProvider>
-        <OpeningSplash active={splashActive} onComplete={finishSplash} />
-        <div
-          className={cn(
-            'min-h-screen bg-background transition-opacity duration-500 ease-out overflow-x-hidden',
-            splashActive ? 'opacity-0' : 'opacity-100',
-          )}
-        >
+        <LocationProvider>
+          <OpeningSplash active={splashActive} onComplete={finishSplash} />
           <div
-            key={contentKey}
-            className={cn('max-w-full overflow-x-hidden', !selectedEventId && 'animate-tab-screen-in')}
+            className={cn(
+              'min-h-screen bg-background transition-opacity duration-500 ease-out overflow-x-hidden',
+              splashActive ? 'opacity-0' : 'opacity-100',
+            )}
           >
-            {renderContent()}
+            <div
+              key={contentKey}
+              className={cn('max-w-full overflow-x-hidden', !selectedEventId && 'animate-tab-screen-in')}
+            >
+              {renderContent()}
+            </div>
+            {matchEvent && (
+              <MatchFlowOverlay event={matchEvent} open onClose={() => setMatchEventId(null)} />
+            )}
+            {matchPlace && (
+              <PlaceMatchFlowOverlay place={matchPlace} open onClose={() => setMatchPlaceId(null)} />
+            )}
+            <BottomNav
+              activeTab={activeTab}
+              onTabChange={(tab) => {
+                setSelectedEventId(null);
+                setActiveTab(tab);
+              }}
+            />
+            <AuthSheet />
+            <DevPanel />
+            <EveningRecallOverlay />
+            <SmartModePrompt />
+            <PlaceSuggestionToast />
           </div>
-          {matchEvent && (
-            <MatchFlowOverlay event={matchEvent} open onClose={() => setMatchEventId(null)} />
-          )}
-          {matchPlace && (
-            <PlaceMatchFlowOverlay place={matchPlace} open onClose={() => setMatchPlaceId(null)} />
-          )}
-          <BottomNav
-            activeTab={activeTab}
-            onTabChange={(tab) => {
-              setSelectedEventId(null);
-              setActiveTab(tab);
-            }}
-          />
-          <AuthSheet />
-        </div>
+        </LocationProvider>
       </AppStateProvider>
     </AuthProvider>
   );
