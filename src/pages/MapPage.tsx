@@ -238,6 +238,10 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         />
         <MapFlyTo center={flyCenter} />
+        <DevMapClickHandler />
+        {loc.currentPos && (
+          <Marker position={loc.currentPos} icon={userPosMarkerIcon} zIndexOffset={900} />
+        )}
         {LANDMARKS.map((landmark) => (
           <Marker
             key={landmark.id}
