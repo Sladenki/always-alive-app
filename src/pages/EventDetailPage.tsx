@@ -4,13 +4,12 @@ import { eventImages } from '@/data/eventImages';
 import PersonCard from '@/components/PersonCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
-import { ArrowLeft, MapPin, Clock, Eye, Flame, Check } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Flame, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EventDetailPageProps {
   eventId: string;
   onBack: () => void;
-  /** After successful «Я иду» — show match moment (prototype) */
   onMatchOpen?: (eventId: string) => void;
 }
 
@@ -31,12 +30,11 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
   const attendees = getAttendeesWithPlaceholders(event);
   const image = eventImages[event.id];
   const going = isSignedUp(event.id);
+  const acquaintances = getAcquaintancesForEvent(event.id);
 
   const coldMessage = event.realSignups === 0
-    ? `👀 ${interest} человек смотрят это событие. Будь первым кто запишется.`
+    ? `👀 ${interest} человек смотрят. Будь первым.`
     : null;
-
-  const acquaintances = getAcquaintancesForEvent(event.id);
 
   const handleSignUp = () => {
     if (!isAuthenticated) {
@@ -49,12 +47,15 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
 
   return (
     <div className="pb-24 max-w-md mx-auto">
-      {/* Header image */}
-      {image && (
-        <div className="relative h-52 w-full overflow-hidden">
+      {/* Header */}
+      {image ? (
+        <div className="relative h-56 w-full overflow-hidden">
           <img src={image} alt={event.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-          <button onClick={onBack} className="absolute top-4 left-4 glass rounded-full p-2">
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 glass-strong rounded-full p-2.5 transition-all active:scale-95"
+          >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           {event.temperature === 'hot' && (
@@ -63,10 +64,8 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
             </div>
           )}
         </div>
-      )}
-
-      {!image && (
-        <div className="sticky top-0 z-10 glass-strong px-4 py-3 flex items-center gap-3">
+      ) : (
+        <div className="sticky top-0 z-10 glass-solid px-4 py-3.5 flex items-center gap-3">
           <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -74,24 +73,25 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
         </div>
       )}
 
-      <div className="px-4 pt-4 space-y-4 animate-fade-up">
+      <div className="px-4 pt-5 space-y-4 animate-fade-up">
+        {/* Acquaintances */}
         {acquaintances.length > 0 && (
-          <div className="rounded-xl border border-[#7c3aed]/35 bg-[#7c3aed]/10 p-4 space-y-3">
-            <h3 className="text-foreground font-semibold text-sm">Ваши знакомства на этом событии</h3>
-            <div className="space-y-2">
+          <div className="rounded-2xl glass p-4 space-y-3" style={{ borderColor: 'hsl(var(--violet) / 0.2)' }}>
+            <h3 className="text-foreground font-semibold text-sm">Ваши знакомства здесь</h3>
+            <div className="space-y-2.5">
               {acquaintances.map((p) => (
                 <div key={p.id} className="flex items-center gap-3">
-                  <div className="w-[52px] h-[52px] rounded-full bg-[#7c3aed]/40 flex items-center justify-center text-base font-bold text-white">
+                  <div className="w-11 h-11 rounded-full bg-violet/20 flex items-center justify-center text-sm font-bold text-foreground">
                     {initials(p.name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{p.name}</p>
+                    <p className="font-medium text-foreground text-sm truncate">{p.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{p.role}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => toast('Чат скоро появится')}
-                    className="text-sm font-semibold text-[#7c3aed] shrink-0 active:scale-[0.97] transition-transform"
+                    className="text-sm font-semibold text-violet shrink-0 active:scale-95 transition-transform"
                   >
                     Написать
                   </button>
@@ -101,38 +101,43 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
           </div>
         )}
 
+        {/* Info */}
         <div className="space-y-2">
           <span className="text-sm">{event.category}</span>
-          <h1 className="text-2xl font-bold text-foreground">{event.title}</h1>
-          <p className="text-muted-foreground text-sm">{event.description}</p>
+          <h1 className="text-2xl font-bold text-foreground leading-tight">{event.title}</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">{event.description}</p>
         </div>
 
-        <div className="glass rounded-xl p-4 space-y-2">
-          <div className="flex items-center gap-2 text-sm text-foreground">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span>{event.location}</span>
+        {/* Details card */}
+        <div className="glass rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2.5 text-sm text-foreground">
+            <MapPin className="w-4 h-4 text-primary shrink-0" />
+            <div>
+              <span>{event.location}</span>
+              <p className="text-xs text-muted-foreground">{event.address}</p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground pl-6">{event.address}</p>
-          <div className="flex items-center gap-2 text-sm text-foreground">
-            <Clock className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-2.5 text-sm text-foreground">
+            <Clock className="w-4 h-4 text-primary shrink-0" />
             <span>{event.date}, {event.time}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Eye className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-2.5 text-sm">
+            <Users className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className={interestNumberClass(interest)}>
-              интересуются: <span className="tabular-nums">{interest}</span> человек
+              <span className="tabular-nums">{interest}</span> интересуются
             </span>
           </div>
         </div>
 
         {coldMessage && (
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="glass rounded-2xl p-4 text-center">
             <p className="text-sm text-muted-foreground">{coldMessage}</p>
           </div>
         )}
 
+        {/* CTA */}
         {going ? (
-          <div className="w-full py-3.5 rounded-xl bg-primary/20 text-primary font-semibold flex items-center justify-center gap-2">
+          <div className="w-full py-3.5 rounded-2xl bg-primary/15 text-primary font-semibold flex items-center justify-center gap-2 text-[15px]">
             <Check className="w-5 h-5" />
             Ты идёшь! 🎉
           </div>
@@ -140,16 +145,17 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
           <button
             type="button"
             onClick={handleSignUp}
-            className={`w-full py-3.5 rounded-xl font-semibold transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110 ${
+            className={`w-full py-4 rounded-2xl font-semibold text-[15px] transition-all duration-150 active:scale-[0.97] ${
               event.temperature === 'hot'
-                ? 'bg-hot text-primary-foreground'
-                : 'bg-primary text-primary-foreground hover:opacity-90'
+                ? 'bg-hot text-primary-foreground shadow-[0_4px_20px_hsl(var(--hot)/0.3)]'
+                : 'bg-primary text-primary-foreground shadow-[0_4px_20px_hsl(var(--primary)/0.25)] hover:shadow-[0_6px_28px_hsl(var(--primary)/0.35)]'
             }`}
           >
             Я иду 🙌
           </button>
         )}
 
+        {/* Attendees */}
         <div>
           <h3 className="text-foreground font-semibold mb-3">Кто идёт</h3>
           <div className="space-y-2">

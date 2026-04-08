@@ -24,109 +24,89 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
   const showDayEndFooter = !showQuiet || tomorrow.length > 0 || laterEvents.length > 0;
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Сейчас</p>
-
-      <div className="relative flex flex-col items-center justify-center mb-6 min-h-[120px]">
-        <div
-          className="pointer-events-none absolute w-[120px] h-[120px] rounded-full animate-city-breathe-bg"
-          aria-hidden
-        />
+    <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
+      {/* Hero pulse */}
+      <div className="relative flex flex-col items-center justify-center mb-8 min-h-[130px]">
+        <div className="pointer-events-none absolute w-28 h-28 rounded-full bg-primary/8 animate-breathe" aria-hidden />
         <span
-          className="relative text-[56px] font-medium leading-none text-white tabular-nums"
+          className="relative text-[52px] font-bold leading-none text-foreground tabular-nums"
           style={{ fontFeatureSettings: '"tnum"' }}
         >
           {pulseCount}
         </span>
-        <p className="relative mt-2 text-base text-muted-foreground text-center px-2">
+        <p className="relative mt-2.5 text-[15px] text-muted-foreground text-center">
           человек сегодня куда-то идут
         </p>
       </div>
 
-      <div className="mb-7">
+      {/* Live places strip */}
+      <section className="mb-8">
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">
-          Прямо сейчас в городе
+          Прямо сейчас
         </p>
-        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
           {feedLivePlacesMock.map((row) => (
-            <div
+            <button
               key={row.placeId}
-              className="min-w-[158px] shrink-0 rounded-xl border border-teal-500/20 bg-card/60 p-3 backdrop-blur-sm"
+              type="button"
+              onClick={() => onOpenMapPlace(row.placeId)}
+              className="min-w-[150px] shrink-0 rounded-2xl glass glass-hover p-3.5 text-left transition-all active:scale-[0.97]"
             >
-              <p className="text-[13px] font-bold text-foreground leading-tight">{row.name}</p>
+              <p className="text-[13px] font-semibold text-foreground leading-tight">{row.name}</p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {row.hereCount} человек здесь
+                {row.hereCount} человек
               </p>
               {row.friendLine && (
-                <p className="text-[11px] text-teal-400 font-medium mt-1.5">{row.friendLine}</p>
+                <p className="text-[11px] text-teal font-medium mt-1.5">{row.friendLine}</p>
               )}
-              <button
-                type="button"
-                onClick={() => onOpenMapPlace(row.placeId)}
-                className="mt-2 text-[11px] font-semibold text-teal-400/90 hover:text-teal-300 transition-colors active:scale-[0.98]"
-              >
-                Зайти на карту
-              </button>
-            </div>
+            </button>
           ))}
         </div>
-      </div>
-
-      <p className="text-sm text-muted-foreground mb-5 text-center">Что происходит в Калининграде</p>
+      </section>
 
       {showQuiet ? (
-        <div className="text-center py-8 animate-fade-up">
-          <Moon className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-foreground font-medium text-lg">Сегодня тихо 🌙</p>
-          <p className="text-muted-foreground text-sm">Зато завтра:</p>
+        <div className="text-center py-10 animate-fade-up">
+          <Moon className="w-10 h-10 text-muted-foreground mx-auto mb-3 animate-float" />
+          <p className="text-foreground font-semibold text-lg">Сегодня тихо 🌙</p>
+          <p className="text-muted-foreground text-sm mt-1">Зато завтра:</p>
         </div>
       ) : (
-        <>
+        <section>
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Сегодня</p>
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-8">
             {today.map((event, i) => (
               <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i} />
             ))}
           </div>
-        </>
+        </section>
       )}
 
       {tomorrow.length > 0 && (
-        <>
+        <section>
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Завтра</p>
-          <div className="space-y-3">
+          <div className="space-y-3 mb-8">
             {tomorrow.map((event, i) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onClick={() => onEventClick(event.id)}
-                index={i + today.length}
-              />
+              <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i + today.length} />
             ))}
           </div>
-        </>
+        </section>
       )}
 
       {laterEvents.length > 0 && (
-        <>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 mt-6 font-semibold">Скоро</p>
+        <section>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Скоро</p>
           <div className="space-y-3">
             {laterEvents.map((event, i) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onClick={() => onEventClick(event.id)}
-                index={i + today.length + tomorrow.length}
-              />
+              <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i + today.length + tomorrow.length} />
             ))}
           </div>
-        </>
+        </section>
       )}
 
       {showDayEndFooter && (
-        <div className="mt-10 mb-6 text-center space-y-2 animate-fade-up">
+        <div className="mt-12 mb-6 text-center space-y-1.5 animate-fade-up">
           <p className="text-foreground font-medium">Это всё на сегодня 🌙</p>
-          <p className="text-sm text-muted-foreground">Завтра появится новое · обновление в 08:00</p>
+          <p className="text-sm text-muted-foreground">Обновление в 08:00</p>
         </div>
       )}
     </div>

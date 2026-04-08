@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 interface OpeningSplashProps {
-  /** When false, component renders nothing */
   active: boolean;
   onComplete: () => void;
 }
@@ -15,7 +14,7 @@ export default function OpeningSplash({ active, onComplete }: OpeningSplashProps
       return;
     }
     setExiting(false);
-    const tExit = window.setTimeout(() => setExiting(true), 600);
+    const tExit = window.setTimeout(() => setExiting(true), 700);
     const tDone = window.setTimeout(() => onComplete(), 1200);
     return () => {
       clearTimeout(tExit);
@@ -31,8 +30,14 @@ export default function OpeningSplash({ active, onComplete }: OpeningSplashProps
       aria-hidden
     >
       <div className={exiting ? 'splash-layer-exit flex flex-col items-center' : 'flex flex-col items-center'}>
-        <p className="splash-layer-logo text-3xl font-semibold tracking-tight text-foreground">Nexus</p>
-        <p className="splash-layer-tagline mt-3 text-lg text-muted-foreground font-medium">Калининград живёт</p>
+        {/* Ambient glow */}
+        <div className="absolute w-48 h-48 rounded-full bg-primary/10 blur-3xl animate-breathe" />
+        <p className="splash-layer-logo text-4xl font-bold tracking-tight text-foreground relative">
+          Nexus
+        </p>
+        <p className="splash-layer-tagline mt-3 text-base text-muted-foreground font-medium relative">
+          Калининград живёт
+        </p>
       </div>
     </div>
   );
