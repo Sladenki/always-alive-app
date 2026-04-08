@@ -11,6 +11,24 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    /** Прокси: Photon/Nominatim часто блокируются / висят с браузера — запросы идут через dev-сервер */
+    proxy: {
+      "/api/photon": {
+        target: "https://photon.komoot.io",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/photon/, ""),
+      },
+      "/api/nominatim": {
+        target: "https://nominatim.openstreetmap.org",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/nominatim/, ""),
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            proxyReq.setHeader("User-Agent", "AlwaysAliveApp/1.0 (local dev)");
+          });
+        },
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

@@ -135,8 +135,9 @@ export default function DevPanel() {
             </button>
           </div>
 
-          <p className="text-[10px] text-muted-foreground/60 text-center">
-            Кликайте по карте чтобы задать позицию. Маршрут виден на вкладке «Карта».
+          <p className="text-[10px] text-muted-foreground/60 text-center leading-snug">
+            Клик по карте: адрес и название точки подтягиваются из OpenStreetMap (если сеть доступна).
+            Оранжевые/бирюзовые маркеры — демо-события и места из приложения, не вся городская сеть.
           </p>
         </div>
       )}

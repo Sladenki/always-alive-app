@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { mockPlaces } from '@/data/mockData';
 import type { CityPlaceData } from '@/data/types';
+import { reverseGeocodeOsmLabel } from '@/lib/reverseGeocode';
 
 /* ────── Types ────── */
 
@@ -179,24 +180,35 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     }
   }, [todayStops]);
 
-  const addStop = useCallback(
-    (lat: number, lng: number, durMin: number) => {
-      const matched = findNearestPlace(lat, lng);
-      const label = matched ? matched.name : generateApproxLabel(lat, lng);
-      const stop: DetectedStop = {
-        id: `stop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        lat,
-        lng,
-        label,
-        startTime: new Date(Date.now() - durMin * 60000),
-        durationMin: durMin,
-        matchedPlace: matched,
-        status: 'pending',
-      };
-      setTodayStops((prev) => [stop, ...prev]);
-    },
-    [],
-  );
+  const addStop = useCallback((lat: number, lng: number, durMin: number) => {
+    const matched = findNearestPlace(lat, lng);
+    const id = `stop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    /** Сразу показываем осмысленную заглушку; при успехе OSM подменяем на реальный адрес */
+    const label = matched ? matched.name : generateApproxLabel(lat, lng);
+
+    const stop: DetectedStop = {
+      id,
+      lat,
+      lng,
+      label,
+      startTime: new Date(Date.now() - durMin * 60000),
+      durationMin: durMin,
+      matchedPlace: matched,
+      status: 'pending',
+    };
+    setTodayStops((prev) => [stop, ...prev]);
+
+    if (!matched) {
+      void reverseGeocodeOsmLabel(lat, lng)
+        .then((osmLabel) => {
+          if (!osmLabel) return;
+          setTodayStops((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, label: osmLabel } : s)),
+          );
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const confirmStop = useCallback((id: string, mood?: string) => {
     setTodayStops((prev) =>
@@ -242,6 +254,18 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     }
     stops.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
     setTodayStops(stops);
+    for (const s of stops) {
+      if (!s.matchedPlace) {
+        void reverseGeocodeOsmLabel(s.lat, s.lng)
+          .then((osmLabel) => {
+            if (!osmLabel) return;
+            setTodayStops((prev) =>
+              prev.map((x) => (x.id === s.id ? { ...x, label: osmLabel } : x)),
+            );
+          })
+          .catch(() => {});
+      }
+    }
     setShowEveningRecall(true);
   }, []);
 
