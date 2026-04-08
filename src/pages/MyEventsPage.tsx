@@ -19,9 +19,9 @@ function GoingCountdown({ event }: { event: EventData }) {
     const tick = () => {
       const ms = start.getTime() - Date.now();
       setLine(formatCountdown(ms));
-      const hoursLeft = ms / 3600000;
-      if (hoursLeft <= 2) setTier('soon');
-      else if (hoursLeft <= 24) setTier('day');
+      const h = ms / 3600000;
+      if (h <= 2) setTier('soon');
+      else if (h <= 24) setTier('day');
       else setTier('far');
     };
     tick();
@@ -29,15 +29,14 @@ function GoingCountdown({ event }: { event: EventData }) {
     return () => clearInterval(id);
   }, [start]);
 
-  const cls =
-    tier === 'far'
-      ? 'text-muted-foreground'
-      : tier === 'day'
-        ? 'text-amber-400'
-        : 'text-red-400 animate-countdown-urgent';
-
   return (
-    <p className={`text-sm font-medium mb-2 tabular-nums ${cls}`}>{line}</p>
+    <p className={`text-sm font-medium mb-2 tabular-nums ${
+      tier === 'far' ? 'text-muted-foreground'
+        : tier === 'day' ? 'text-warm'
+        : 'text-hot animate-countdown-urgent'
+    }`}>
+      {line}
+    </p>
   );
 }
 
@@ -48,8 +47,8 @@ export default function MyEventsPage({ onEventClick }: MyEventsPageProps) {
 
   if (myEvents.length > 0) {
     return (
-      <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-5">Я иду</h1>
+      <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-foreground mb-6">Я иду</h1>
         <div className="space-y-3">
           {myEvents.map((event, i) => (
             <div key={event.id}>
@@ -60,17 +59,12 @@ export default function MyEventsPage({ onEventClick }: MyEventsPageProps) {
         </div>
         {recommended.length > 0 && (
           <>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mt-8 mb-3 font-semibold">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mt-10 mb-3 font-semibold">
               Ещё интересное
             </p>
             <div className="space-y-3">
               {recommended.map((event, i) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onClick={() => onEventClick(event.id)}
-                  index={i + myEvents.length}
-                />
+                <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i + myEvents.length} />
               ))}
             </div>
           </>
@@ -80,28 +74,19 @@ export default function MyEventsPage({ onEventClick }: MyEventsPageProps) {
   }
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-5">Я иду</h1>
-      <div className="text-center py-6 animate-fade-up">
+    <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold text-foreground mb-6">Я иду</h1>
+      <div className="text-center py-8 animate-fade-up">
         <CalendarX className="w-10 h-10 text-muted-foreground mx-auto mb-3 animate-float-gentle" />
-        <p className="text-foreground font-medium text-lg mb-1">Ты ещё никуда не записался</p>
-        <p className="text-muted-foreground text-sm mb-6">
-          Сейчас в городе {CITY_GOING_COUNT} человек куда-то идут 👇
+        <p className="text-foreground font-semibold text-lg mb-1">Ты ещё никуда не записался</p>
+        <p className="text-muted-foreground text-sm mb-8">
+          Сейчас в городе {CITY_GOING_COUNT} человек куда-то идут
         </p>
       </div>
       <div className="space-y-3">
         {recommended.map((event, i) => (
-          <div
-            key={event.id}
-            className="staggered-list-up"
-            style={{ animationDelay: `${i * 0.15}s` }}
-          >
-            <EventCard
-              event={event}
-              onClick={() => onEventClick(event.id)}
-              index={i}
-              revealOnScroll={false}
-            />
+          <div key={event.id} className="staggered-list-up" style={{ animationDelay: `${i * 0.12}s` }}>
+            <EventCard event={event} onClick={() => onEventClick(event.id)} index={i} revealOnScroll={false} />
           </div>
         ))}
       </div>

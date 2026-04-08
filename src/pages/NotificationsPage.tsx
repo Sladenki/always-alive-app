@@ -3,6 +3,7 @@ import { useAppState } from '@/contexts/AppStateContext';
 import type { NotificationData, NotificationKind } from '@/data/types';
 import { Bell } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface NotificationsPageProps {
   onOpenMatch?: (eventId: string) => void;
@@ -11,7 +12,7 @@ interface NotificationsPageProps {
   onOpenPlaceMatch?: (placeId: string) => void;
 }
 
-function isPlaceNotificationKind(k: NotificationKind | undefined): boolean {
+function isPlaceKind(k: NotificationKind | undefined): boolean {
   return k === 'place_map' || k === 'place_sheet' || k === 'place_match';
 }
 
@@ -36,10 +37,7 @@ export default function NotificationsPage({
 
   useEffect(() => {
     const first = all[0];
-    if (!first) {
-      prevFirstRef.current = undefined;
-      return;
-    }
+    if (!first) { prevFirstRef.current = undefined; return; }
     const prev = prevFirstRef.current;
     if (first.kind === 'fomo' && prev !== undefined && first.id !== prev) {
       setSpringId(first.id);
@@ -50,99 +48,76 @@ export default function NotificationsPage({
     prevFirstRef.current = first.id;
   }, [all]);
 
-  const handleRowClick = (notif: NotificationData) => {
-    if (notif.kind === 'fomo' && notif.eventId) {
-      markNotificationRead(notif.id);
-      onOpenMatch?.(notif.eventId);
-      return;
-    }
-    if (notif.kind === 'place_map' && notif.placeId) {
-      markNotificationRead(notif.id);
-      onOpenMapPlace?.(notif.placeId);
-      return;
-    }
-    if (notif.kind === 'place_sheet' && notif.placeId) {
-      markNotificationRead(notif.id);
-      onOpenPlaceSheet?.(notif.placeId);
-      return;
-    }
-    if (notif.kind === 'place_match' && notif.placeId) {
-      markNotificationRead(notif.id);
-      onOpenPlaceMatch?.(notif.placeId);
-    }
+  const handleClick = (n: NotificationData) => {
+    if (n.kind === 'fomo' && n.eventId) { markNotificationRead(n.id); onOpenMatch?.(n.eventId); return; }
+    if (n.kind === 'place_map' && n.placeId) { markNotificationRead(n.id); onOpenMapPlace?.(n.placeId); return; }
+    if (n.kind === 'place_sheet' && n.placeId) { markNotificationRead(n.id); onOpenPlaceSheet?.(n.placeId); return; }
+    if (n.kind === 'place_match' && n.placeId) { markNotificationRead(n.id); onOpenPlaceMatch?.(n.placeId); }
   };
 
   if (all.length === 0) {
     return (
-      <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-5">Уведомления</h1>
-        <div className="text-center py-14 animate-fade-up">
-          <div className="mx-auto mb-4 w-fit origin-top animate-bell-ring-intro">
-            <Bell className="w-12 h-12 text-muted-foreground" strokeWidth={1.5} />
+      <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-foreground mb-6">Уведомления</h1>
+        <div className="text-center py-16 animate-fade-up">
+          <div className="mx-auto mb-4 w-fit animate-bell-ring-intro">
+            <Bell className="w-11 h-11 text-muted-foreground" strokeWidth={1.5} />
           </div>
-          <p className="text-foreground font-medium text-lg">Пока тихо — но город не спит</p>
+          <p className="text-foreground font-semibold text-lg">Пока тихо</p>
+          <p className="text-sm text-muted-foreground mt-1">Но город не спит</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-5">Уведомления</h1>
-      <div className="space-y-3">
+    <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold text-foreground mb-6">Уведомления</h1>
+      <div className="space-y-2">
         {all.map((notif, i) => {
           const isFomo = notif.kind === 'fomo';
-          const isPlace = isPlaceNotificationKind(notif.kind);
-          const isClickable = isFomo || isPlace;
-          const isUnread = !notif.isRead;
+          const isPlace = isPlaceKind(notif.kind);
+          const clickable = isFomo || isPlace;
+          const unread = !notif.isRead;
           const isSpring = springId === notif.id;
-          const iconIsFire = notif.icon === '🔥';
+
           return (
             <div
               key={notif.id}
-              role={isClickable ? 'button' : undefined}
-              tabIndex={isClickable ? 0 : undefined}
-              onClick={() => isClickable && handleRowClick(notif)}
+              role={clickable ? 'button' : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              onClick={() => clickable && handleClick(notif)}
               onKeyDown={(e) => {
-                if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+                if (clickable && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
-                  handleRowClick(notif);
+                  handleClick(notif);
                 }
               }}
-              className={`w-full text-left glass rounded-xl p-4 flex items-start gap-3 ${
-                isSpring ? 'animate-notif-enter' : 'animate-fade-up'
-              } ${
-                isClickable
-                  ? `cursor-pointer transition-[transform] duration-150 active:scale-[0.99] ${
-                      isPlace
-                        ? 'border border-teal-500/25 hover:bg-teal-500/5'
-                        : 'border border-[#7c3aed]/25 hover:bg-[#7c3aed]/5'
-                    }`
-                  : ''
-              } ${
-                isUnread
-                  ? isFomo
-                    ? 'border-l-[3px] border-l-[#7c3aed] bg-[#7c3aed]/10'
-                    : isPlace
-                      ? 'border-l-[3px] border-l-teal-500 bg-teal-500/5'
-                      : 'border-l-[3px] border-l-muted'
-                  : ''
-              }`}
-              style={{ animationDelay: isSpring ? undefined : `${i * 100}ms` }}
+              className={cn(
+                'w-full text-left rounded-2xl p-4 flex items-start gap-3 glass transition-all',
+                isSpring ? 'animate-notif-enter' : 'animate-fade-up',
+                clickable && 'cursor-pointer active:scale-[0.98] glass-hover',
+                unread && isFomo && 'border-l-[3px] border-l-violet bg-violet/5',
+                unread && isPlace && 'border-l-[3px] border-l-teal bg-teal/5',
+                unread && !isFomo && !isPlace && 'border-l-[3px] border-l-muted',
+              )}
+              style={{ animationDelay: isSpring ? undefined : `${i * 0.06}s` }}
             >
-              <span className={`text-xl shrink-0 ${iconIsFire ? 'inline-flex animate-icon-fire-intro' : ''}`}>
+              <span className={cn(
+                'text-xl shrink-0',
+                notif.icon === '🔥' && 'animate-icon-fire-intro',
+              )}>
                 {notif.icon}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground">{notif.text}</p>
+                <p className="text-sm text-foreground leading-snug">{notif.text}</p>
                 <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
               </div>
-              {isUnread && (
-                <div
-                  className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
-                    isFomo ? 'bg-[#7c3aed]' : isPlace ? 'bg-teal-400' : 'bg-muted-foreground'
-                  }`}
-                />
+              {unread && (
+                <div className={cn(
+                  'w-2 h-2 rounded-full mt-2 shrink-0',
+                  isFomo ? 'bg-violet' : isPlace ? 'bg-teal' : 'bg-muted-foreground',
+                )} />
               )}
             </div>
           );
