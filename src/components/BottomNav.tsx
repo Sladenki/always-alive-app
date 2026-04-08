@@ -1,24 +1,16 @@
-import { Map, Zap, Calendar, Bell, User } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { APP_TABS, type TabId } from '@/config/navigation';
 
 interface BottomNavProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
 }
 
-const tabs = [
-  { id: 'feed', icon: Zap, label: 'Сейчас' },
-  { id: 'map', icon: Map, label: 'Карта' },
-  { id: 'myevents', icon: Calendar, label: 'Я иду' },
-  { id: 'notifications', icon: Bell, label: 'Инбокс' },
-  { id: 'profile', icon: User, label: 'Профиль' },
-];
-
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  const [popTab, setPopTab] = useState<string | null>(null);
+  const [popTab, setPopTab] = useState<TabId | null>(null);
 
-  const handleTab = (id: string) => {
+  const handleTab = (id: TabId) => {
     setPopTab(id);
     window.setTimeout(() => setPopTab(null), 220);
     onTabChange(id);
@@ -28,7 +20,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     <nav className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]">
       <div className="glass-solid border-t-0 rounded-t-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.3)]">
         <div className="max-w-md mx-auto flex items-center justify-around py-2 px-2">
-          {tabs.map(({ id, icon: Icon, label }) => {
+          {APP_TABS.map(({ id, icon: Icon, label }) => {
             const isActive = activeTab === id;
             return (
               <button

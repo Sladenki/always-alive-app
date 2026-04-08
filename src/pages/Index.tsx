@@ -19,9 +19,10 @@ import NotificationsPage from '@/pages/NotificationsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import { mockEvents, getPlaceById } from '@/data/mockData';
 import { cn } from '@/lib/utils';
+import { type TabId } from '@/config/navigation';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState<TabId>('feed');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [matchEventId, setMatchEventId] = useState<string | null>(null);
   const [matchPlaceId, setMatchPlaceId] = useState<string | null>(null);
@@ -44,6 +45,11 @@ const Index = () => {
 
   const contentKey = selectedEventId ?? activeTab;
 
+  const openMapByPlace = (placeId: string, openSheet = false) => {
+    setMapIntent({ placeId, openSheet });
+    setActiveTab('map');
+  };
+
   const renderContent = () => {
     if (selectedEventId) {
       return (
@@ -59,10 +65,7 @@ const Index = () => {
         return (
           <FeedPage
             onEventClick={handleEventClick}
-            onOpenMapPlace={(placeId) => {
-              setMapIntent({ placeId });
-              setActiveTab('map');
-            }}
+            onOpenMapPlace={(placeId) => openMapByPlace(placeId)}
           />
         );
       case 'map':
@@ -79,14 +82,8 @@ const Index = () => {
         return (
           <NotificationsPage
             onOpenMatch={(id) => setMatchEventId(id)}
-            onOpenMapPlace={(placeId) => {
-              setMapIntent({ placeId });
-              setActiveTab('map');
-            }}
-            onOpenPlaceSheet={(placeId) => {
-              setMapIntent({ placeId, openSheet: true });
-              setActiveTab('map');
-            }}
+            onOpenMapPlace={(placeId) => openMapByPlace(placeId)}
+            onOpenPlaceSheet={(placeId) => openMapByPlace(placeId, true)}
             onOpenPlaceMatch={(placeId) => setMatchPlaceId(placeId)}
           />
         );
@@ -96,10 +93,7 @@ const Index = () => {
         return (
           <FeedPage
             onEventClick={handleEventClick}
-            onOpenMapPlace={(placeId) => {
-              setMapIntent({ placeId });
-              setActiveTab('map');
-            }}
+            onOpenMapPlace={(placeId) => openMapByPlace(placeId)}
           />
         );
     }

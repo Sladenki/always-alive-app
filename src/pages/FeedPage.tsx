@@ -8,6 +8,8 @@ import {
 import EventCard from '@/components/EventCard';
 import { Moon } from 'lucide-react';
 import { useCountUp } from '@/hooks/useCountUp';
+import Screen from '@/components/layout/Screen';
+import { GlassPanel } from '@/components/ui/glass-panel';
 
 interface FeedPageProps {
   onEventClick: (id: string) => void;
@@ -24,7 +26,7 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
   const showDayEndFooter = !showQuiet || tomorrow.length > 0 || laterEvents.length > 0;
 
   return (
-    <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
+    <Screen>
       {/* Hero pulse */}
       <div className="relative flex flex-col items-center justify-center mb-8 min-h-[130px]">
         <div className="pointer-events-none absolute w-28 h-28 rounded-full bg-primary/8 animate-breathe" aria-hidden />
@@ -37,6 +39,7 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
         <p className="relative mt-2.5 text-[15px] text-muted-foreground text-center">
           человек сегодня куда-то идут
         </p>
+        <div className="pointer-events-none absolute -z-10 top-8 h-20 w-72 rounded-full bg-primary/12 blur-3xl" />
       </div>
 
       {/* Live places strip */}
@@ -46,19 +49,16 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
         </p>
         <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
           {feedLivePlacesMock.map((row) => (
-            <button
-              key={row.placeId}
-              type="button"
-              onClick={() => onOpenMapPlace(row.placeId)}
-              className="min-w-[150px] shrink-0 rounded-2xl glass glass-hover p-3.5 text-left transition-all active:scale-[0.97]"
-            >
-              <p className="text-[13px] font-semibold text-foreground leading-tight">{row.name}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {row.hereCount} человек
-              </p>
-              {row.friendLine && (
-                <p className="text-[11px] text-teal font-medium mt-1.5">{row.friendLine}</p>
-              )}
+            <button key={row.placeId} type="button" onClick={() => onOpenMapPlace(row.placeId)} className="min-w-[150px] shrink-0 text-left">
+              <GlassPanel interactive className="p-3.5">
+                <p className="text-[13px] font-semibold text-foreground leading-tight">{row.name}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {row.hereCount} человек
+                </p>
+                {row.friendLine && (
+                  <p className="text-[11px] text-teal font-medium mt-1.5">{row.friendLine}</p>
+                )}
+              </GlassPanel>
             </button>
           ))}
         </div>
@@ -109,6 +109,6 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
           <p className="text-sm text-muted-foreground">Обновление в 08:00</p>
         </div>
       )}
-    </div>
+    </Screen>
   );
 }

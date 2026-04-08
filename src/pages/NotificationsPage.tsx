@@ -4,6 +4,8 @@ import type { NotificationData, NotificationKind } from '@/data/types';
 import { Bell } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import Screen from '@/components/layout/Screen';
+import { GlassPanel } from '@/components/ui/glass-panel';
 
 interface NotificationsPageProps {
   onOpenMatch?: (eventId: string) => void;
@@ -57,8 +59,7 @@ export default function NotificationsPage({
 
   if (all.length === 0) {
     return (
-      <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Уведомления</h1>
+      <Screen title="Уведомления" subtitle="Важные сигналы и совпадения">
         <div className="text-center py-16 animate-fade-up">
           <div className="mx-auto mb-4 w-fit animate-bell-ring-intro">
             <Bell className="w-11 h-11 text-muted-foreground" strokeWidth={1.5} />
@@ -66,13 +67,12 @@ export default function NotificationsPage({
           <p className="text-foreground font-semibold text-lg">Пока тихо</p>
           <p className="text-sm text-muted-foreground mt-1">Но город не спит</p>
         </div>
-      </div>
+      </Screen>
     );
   }
 
   return (
-    <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Уведомления</h1>
+    <Screen title="Уведомления" subtitle="Новые интро, fomo и place-match сценарии">
       <div className="space-y-2">
         {all.map((notif, i) => {
           const isFomo = notif.kind === 'fomo';
@@ -93,36 +93,39 @@ export default function NotificationsPage({
                   handleClick(notif);
                 }
               }}
-              className={cn(
-                'w-full text-left rounded-2xl p-4 flex items-start gap-3 glass transition-all',
-                isSpring ? 'animate-notif-enter' : 'animate-fade-up',
-                clickable && 'cursor-pointer active:scale-[0.98] glass-hover',
-                unread && isFomo && 'border-l-[3px] border-l-violet bg-violet/5',
-                unread && isPlace && 'border-l-[3px] border-l-teal bg-teal/5',
-                unread && !isFomo && !isPlace && 'border-l-[3px] border-l-muted',
-              )}
+              className={cn('w-full text-left', isSpring ? 'animate-notif-enter' : 'animate-fade-up')}
               style={{ animationDelay: isSpring ? undefined : `${i * 0.06}s` }}
             >
-              <span className={cn(
-                'text-xl shrink-0',
-                notif.icon === '🔥' && 'animate-icon-fire-intro',
-              )}>
-                {notif.icon}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground leading-snug">{notif.text}</p>
-                <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
-              </div>
-              {unread && (
-                <div className={cn(
-                  'w-2 h-2 rounded-full mt-2 shrink-0',
-                  isFomo ? 'bg-violet' : isPlace ? 'bg-teal' : 'bg-muted-foreground',
-                )} />
-              )}
+              <GlassPanel
+                interactive={clickable}
+                className={cn(
+                  'p-4 flex items-start gap-3',
+                  unread && isFomo && 'border-l-[3px] border-l-violet bg-violet/5',
+                  unread && isPlace && 'border-l-[3px] border-l-teal bg-teal/5',
+                  unread && !isFomo && !isPlace && 'border-l-[3px] border-l-muted',
+                )}
+              >
+                <span className={cn(
+                  'text-xl shrink-0',
+                  notif.icon === '🔥' && 'animate-icon-fire-intro',
+                )}>
+                  {notif.icon}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground leading-snug">{notif.text}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
+                </div>
+                {unread && (
+                  <div className={cn(
+                    'w-2 h-2 rounded-full mt-2 shrink-0',
+                    isFomo ? 'bg-violet' : isPlace ? 'bg-teal' : 'bg-muted-foreground',
+                  )} />
+                )}
+              </GlassPanel>
             </div>
           );
         })}
       </div>
-    </div>
+    </Screen>
   );
 }

@@ -5,6 +5,7 @@ import { CalendarX } from 'lucide-react';
 import { estimateEventStart, formatCountdown } from '@/lib/eventStart';
 import type { EventData } from '@/data/types';
 import { useEffect, useState } from 'react';
+import Screen from '@/components/layout/Screen';
 
 interface MyEventsPageProps {
   onEventClick: (id: string) => void;
@@ -47,8 +48,7 @@ export default function MyEventsPage({ onEventClick }: MyEventsPageProps) {
 
   if (myEvents.length > 0) {
     return (
-      <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Я иду</h1>
+      <Screen title="Я иду" subtitle="Твои текущие планы и ближайшие события">
         <div className="space-y-3">
           {myEvents.map((event, i) => (
             <div key={event.id}>
@@ -69,13 +69,12 @@ export default function MyEventsPage({ onEventClick }: MyEventsPageProps) {
             </div>
           </>
         )}
-      </div>
+      </Screen>
     );
   }
 
   return (
-    <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Я иду</h1>
+    <Screen title="Я иду" subtitle="Пока пусто — но город уже живет">
       <div className="text-center py-8 animate-fade-up">
         <CalendarX className="w-10 h-10 text-muted-foreground mx-auto mb-3 animate-float-gentle" />
         <p className="text-foreground font-semibold text-lg mb-1">Ты ещё никуда не записался</p>
@@ -90,6 +89,6 @@ export default function MyEventsPage({ onEventClick }: MyEventsPageProps) {
           </div>
         ))}
       </div>
-    </div>
+    </Screen>
   );
 }
