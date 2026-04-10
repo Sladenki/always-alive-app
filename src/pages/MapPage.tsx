@@ -1,28 +1,34 @@
 import { mockEvents, getInterestCount, mockPlaces, getPlaceById } from '@/data/mockData';
-import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish, Bug, Route } from 'lucide-react';
+import { Flame, Coffee, Trees, GraduationCap, MapPin, Fish, Bug, Footprints, GitCompareArrows } from 'lucide-react';
 import {
   MapContainer,
   TileLayer,
   Marker,
   Tooltip,
-  Polyline,
   useMap,
   useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAppState } from '@/contexts/AppStateContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import type { EventData, CityPlaceData } from '@/data/types';
 import { interestNumberClass } from '@/lib/interestText';
-import DayHistorySheet from '@/components/DayHistorySheet';
 import PlaceCheckInFlowOverlay from '@/components/PlaceCheckInFlowOverlay';
 import { buildPlaceMarkerHtml } from '@/lib/placeMarkerHtml';
-import { sortStopsByTime } from '@/lib/dayRoute';
 import { cn } from '@/lib/utils';
+
+// Day route imports
+import { mockDayRoute, getNearMissForStop } from '@/data/dayRouteData';
+import type { DayRouteStop, NearMissPerson } from '@/data/dayRouteData';
+import DayRouteLayer from '@/components/map/DayRouteLayer';
+import NearMissSheet from '@/components/map/NearMissSheet';
+import DayTimelineStrip from '@/components/map/DayTimelineStrip';
+import RouteCompareSheet from '@/components/map/RouteCompareSheet';
+import SaveDayNotification from '@/components/map/SaveDayNotification';
 
 export interface MapIntent {
   placeId: string;
@@ -100,18 +106,6 @@ function landmarkIcon() {
   });
 }
 
-/** Номер шага на линии маршрута дня */
-function routeStepIcon(step: number) {
-  const html = `
-<div style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:9999px;background:#7c3aed;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 10px rgba(124,58,237,0.5);font-size:11px;font-weight:700;color:#fff">${step}</div>`;
-  return L.divIcon({
-    html,
-    className: 'map-marker-wrap',
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-  });
-}
-
 function MapFlyTo({ center }: { center: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
@@ -120,7 +114,6 @@ function MapFlyTo({ center }: { center: [number, number] | null }) {
   return null;
 }
 
-/** Dev mode: click map to set simulated position */
 function DevMapClickHandler() {
   const { devMode, devSetPosition } = useLocation();
   useMapEvents({
@@ -153,17 +146,33 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [flyCenter, setFlyCenter] = useState<[number, number] | null>(null);
   const [checkIn, setCheckIn] = useState<{ place: CityPlaceData; live: boolean } | null>(null);
-  const [dayHistoryOpen, setDayHistoryOpen] = useState(false);
+
+  // Day route state
+  const [dayRouteActive, setDayRouteActive] = useState(false);
+  const [nearMissStop, setNearMissStop] = useState<DayRouteStop | null>(null);
+  const [nearMissPeople, setNearMissPeople] = useState<NearMissPerson[]>([]);
+  const [activeTimelineStop, setActiveTimelineStop] = useState<string | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [showSaveNotif, setShowSaveNotif] = useState(false);
+  const [daySaved, setDaySaved] = useState(false);
 
   const { signUpForEvent, isSignedUp, getPlaceVisitCount, placeVisitCounts } = useAppState();
   const { requestAuth, isAuthenticated } = useAuth();
   const loc = useLocation();
 
-  // Track map opens
   useEffect(() => {
     loc.incrementMapOpen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Show save notification after 21:00 when route is active
+  useEffect(() => {
+    const h = new Date().getHours();
+    if (dayRouteActive && !daySaved && h >= 21) {
+      const t = setTimeout(() => setShowSaveNotif(true), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [dayRouteActive, daySaved]);
 
   const userPosMarkerIcon = useMemo(() => userPosIcon(), []);
 
@@ -184,16 +193,6 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
     return m;
   }, [placeVisitCounts]);
   const orientationLandmarkIcon = useMemo(() => landmarkIcon(), []);
-
-  const dayRoute = useMemo(() => {
-    const sorted = sortStopsByTime(loc.todayStops);
-    const positions = sorted.map((s) => [s.lat, s.lng] as [number, number]);
-    return { sorted, positions };
-  }, [loc.todayStops]);
-
-  const routeStepIcons = useMemo(() => {
-    return dayRoute.sorted.map((_, i) => routeStepIcon(i + 1));
-  }, [dayRoute.sorted]);
 
   useEffect(() => {
     if (!mapIntent?.placeId) return;
@@ -228,34 +227,72 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
     setCheckIn({ place, live });
   };
 
+  const handleRouteStopClick = useCallback((stop: DayRouteStop) => {
+    setActiveTimelineStop(stop.id);
+    setFlyCenter([stop.lat, stop.lng]);
+    const people = getNearMissForStop(stop.id);
+    setNearMissPeople(people);
+    setNearMissStop(stop);
+  }, []);
+
+  const handleTimelineStopTap = useCallback((stop: DayRouteStop) => {
+    setActiveTimelineStop(stop.id);
+    setFlyCenter([stop.lat, stop.lng]);
+    // Small delay then show near-miss sheet
+    const people = getNearMissForStop(stop.id);
+    if (people.length > 0) {
+      setTimeout(() => {
+        setNearMissPeople(people);
+        setNearMissStop(stop);
+      }, 600);
+    }
+  }, []);
+
   const PlaceCatIcon = selectedPlace ? categoryPlaceIcon(selectedPlace.category) : MapPin;
   const visits = selectedPlace ? getPlaceVisitCount(selectedPlace.id) : 0;
 
   return (
     <div className="relative h-[calc(100vh-60px)] w-full overflow-hidden">
-      <div className="absolute top-2 left-0 right-0 z-[1100] flex justify-center px-3 pointer-events-none">
+      {/* Top controls */}
+      <div className="absolute top-2 left-0 right-0 z-[1100] flex justify-between items-start px-3 pointer-events-none">
+        {/* Map mode toggle */}
         <div className="pointer-events-auto flex rounded-full bg-[#1e2130]/95 border border-white/10 p-1 shadow-lg backdrop-blur-md">
           <button
             type="button"
-            onClick={() => setMapMode('events')}
+            onClick={() => { setMapMode('events'); setDayRouteActive(false); }}
             className={cn(
               'px-4 py-2 rounded-full text-sm font-semibold transition-all active:scale-[0.97]',
-              mapMode === 'events' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground',
+              mapMode === 'events' && !dayRouteActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground',
             )}
           >
             События
           </button>
           <button
             type="button"
-            onClick={() => setMapMode('places')}
+            onClick={() => { setMapMode('places'); setDayRouteActive(false); }}
             className={cn(
               'px-4 py-2 rounded-full text-sm font-semibold transition-all active:scale-[0.97]',
-              mapMode === 'places' ? 'bg-teal-500 text-[#0f172a]' : 'text-muted-foreground',
+              mapMode === 'places' && !dayRouteActive ? 'bg-teal-500 text-[#0f172a]' : 'text-muted-foreground',
             )}
           >
             Места
           </button>
         </div>
+
+        {/* "Мой день" toggle */}
+        <button
+          type="button"
+          onClick={() => setDayRouteActive((v) => !v)}
+          className={cn(
+            'pointer-events-auto flex items-center gap-1.5 pl-3 pr-3.5 py-2.5 rounded-full text-xs font-semibold transition-all active:scale-[0.97] shadow-lg backdrop-blur-md',
+            dayRouteActive
+              ? 'bg-[#00d4aa]/15 border border-[#00d4aa]/50 text-[#00d4aa] shadow-[0_0_16px_rgba(0,212,170,0.2)]'
+              : 'bg-[#1e2130]/95 border border-[#00d4aa]/30 text-[#00d4aa]/80',
+          )}
+        >
+          <Footprints className="w-3.5 h-3.5" />
+          Мой день
+        </button>
       </div>
 
       <MapContainer
@@ -266,41 +303,28 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         style={{ background: 'hsl(230, 25%, 9%)' }}
         attributionControl={false}
       >
-        <TileLayer 
-        // url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" 
-        url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-        />
+        <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png" />
         <MapFlyTo center={flyCenter} />
         <DevMapClickHandler />
-        {dayRoute.positions.length >= 2 && (
-          <Polyline
-            positions={dayRoute.positions}
-            pathOptions={{
-              color: '#a78bfa',
-              weight: 4,
-              opacity: 0.88,
-              lineCap: 'round',
-              lineJoin: 'round',
-            }}
-          />
+
+        {/* Day route layer */}
+        {dayRouteActive && (
+          <DayRouteLayer stops={mockDayRoute} onStopClick={handleRouteStopClick} />
         )}
-        {dayRoute.sorted.map((s, i) => (
-          <Marker key={s.id} position={[s.lat, s.lng]} icon={routeStepIcons[i]} zIndexOffset={850} />
-        ))}
+
+        {/* User position */}
         {loc.currentPos && (
           <Marker position={loc.currentPos} icon={userPosMarkerIcon} zIndexOffset={900} />
         )}
+
+        {/* Landmarks */}
         {LANDMARKS.map((landmark) => (
           <Marker
             key={landmark.id}
             position={[landmark.lat, landmark.lng]}
             icon={orientationLandmarkIcon}
             zIndexOffset={700}
-            eventHandlers={{
-              click: () => {
-                setFlyCenter([landmark.lat, landmark.lng]);
-              },
-            }}
+            eventHandlers={{ click: () => setFlyCenter([landmark.lat, landmark.lng]) }}
           >
             <Tooltip
               permanent
@@ -313,7 +337,9 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
             </Tooltip>
           </Marker>
         ))}
-        {mapMode === 'events' &&
+
+        {/* Events */}
+        {!dayRouteActive && mapMode === 'events' &&
           mockEvents.map((event) => (
             <Marker
               key={event.id}
@@ -327,7 +353,9 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
               }}
             />
           ))}
-        {mapMode === 'places' &&
+
+        {/* Places */}
+        {!dayRouteActive && mapMode === 'places' &&
           mockPlaces.map((place) => (
             <Marker
               key={place.id}
@@ -343,72 +371,91 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
           ))}
       </MapContainer>
 
-      {loc.todayStops.length > 0 && (
+      {/* Day route timeline strip */}
+      {dayRouteActive && (
+        <DayTimelineStrip
+          stops={mockDayRoute}
+          activeStopId={activeTimelineStop}
+          onStopTap={handleTimelineStopTap}
+        />
+      )}
+
+      {/* Compare routes button — shows when day route active */}
+      {dayRouteActive && (
         <button
           type="button"
-          onClick={() => setDayHistoryOpen(true)}
-          className="absolute bottom-[7.25rem] left-3 z-[1100] flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-2xl bg-[#1e2130]/95 border border-violet-500/30 text-violet-200 text-xs font-semibold shadow-lg backdrop-blur-md pointer-events-auto active:scale-[0.98] transition-transform"
+          onClick={() => setCompareOpen(true)}
+          className="absolute bottom-[7.25rem] right-3 z-[1100] flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1e2130]/95 border border-violet-500/30 text-violet-300 text-[11px] font-semibold shadow-lg backdrop-blur-md active:scale-[0.98] transition-transform"
         >
-          <Route className="w-4 h-4 shrink-0 text-violet-400" />
-          История дня
+          <GitCompareArrows className="w-3.5 h-3.5" />
+          Сравнить
         </button>
       )}
 
-      <Sheet open={dayHistoryOpen} onOpenChange={setDayHistoryOpen}>
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          overlayClassName="z-[2100]"
-          className="z-[2100] max-h-[82vh] overflow-y-auto max-w-md mx-auto left-0 right-0 rounded-t-3xl bg-[#161a28] border border-white/[0.06] pb-28 pt-2 data-[state=open]:!animate-none shadow-[0_-20px_60px_rgba(0,0,0,0.45)]"
-        >
-          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" aria-hidden />
-          <SheetHeader className="sr-only">
-            <SheetTitle>История дня</SheetTitle>
-          </SheetHeader>
-          <DayHistorySheet sorted={dayRoute.sorted} />
-        </SheetContent>
-      </Sheet>
-
-      <div className="absolute bottom-16 left-0 right-0 px-4 z-[1000]">
-        <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {mapMode === 'events'
-            ? mockEvents.slice(0, 4).map((event) => (
-                <button
-                  key={event.id}
-                  type="button"
-                  onClick={() => onEventClick(event.id)}
-                  className="glass-strong rounded-xl p-3 min-w-[200px] shrink-0 text-left transition-transform active:scale-[0.96] duration-150 active:brightness-110"
-                >
-                  <div className="flex items-center gap-1.5 mb-1">
-                    {event.temperature === 'hot' && <Flame className="w-3 h-3 text-hot" />}
-                    <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    {event.time} · {event.location}
-                  </p>
-                </button>
-              ))
-            : mockPlaces.slice(0, 5).map((place) => (
-                <button
-                  key={place.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPlaceId(place.id);
-                    setFlyCenter([place.lat, place.lng]);
-                  }}
-                  className="glass-strong rounded-xl p-3 min-w-[180px] shrink-0 text-left border border-teal-500/20 transition-transform active:scale-[0.96] duration-150"
-                >
-                  <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1">
-                    <span>{place.icon}</span> {place.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {place.totalBeenHere} были здесь
-                  </p>
-                </button>
-              ))}
+      {/* Bottom card strip (when route NOT active) */}
+      {!dayRouteActive && (
+        <div className="absolute bottom-16 left-0 right-0 px-4 z-[1000]">
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {mapMode === 'events'
+              ? mockEvents.slice(0, 4).map((event) => (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => onEventClick(event.id)}
+                    className="glass-strong rounded-xl p-3 min-w-[200px] shrink-0 text-left transition-transform active:scale-[0.96] duration-150 active:brightness-110"
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {event.temperature === 'hot' && <Flame className="w-3 h-3 text-hot" />}
+                      <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {event.time} · {event.location}
+                    </p>
+                  </button>
+                ))
+              : mockPlaces.slice(0, 5).map((place) => (
+                  <button
+                    key={place.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlaceId(place.id);
+                      setFlyCenter([place.lat, place.lng]);
+                    }}
+                    className="glass-strong rounded-xl p-3 min-w-[180px] shrink-0 text-left border border-teal-500/20 transition-transform active:scale-[0.96] duration-150"
+                  >
+                    <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1">
+                      <span>{place.icon}</span> {place.name}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {place.totalBeenHere} были здесь
+                    </p>
+                  </button>
+                ))}
+          </div>
         </div>
-      </div>
+      )}
 
+      {/* Near miss sheet */}
+      <NearMissSheet
+        stop={nearMissStop}
+        people={nearMissPeople}
+        open={!!nearMissStop}
+        onClose={() => setNearMissStop(null)}
+      />
+
+      {/* Compare routes sheet */}
+      <RouteCompareSheet open={compareOpen} onClose={() => setCompareOpen(false)} />
+
+      {/* Save day notification */}
+      {showSaveNotif && !daySaved && (
+        <SaveDayNotification
+          stops={mockDayRoute}
+          onSave={() => { setDaySaved(true); setShowSaveNotif(false); }}
+          onDismiss={() => setShowSaveNotif(false)}
+        />
+      )}
+
+      {/* Event sheet */}
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelectedId(null)}>
         <SheetContent
           side="bottom"
@@ -425,8 +472,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                 </p>
               </SheetHeader>
               <p className="text-sm text-foreground mt-4">
-                <span className={`tabular-nums ${interestNumberClass(interest)}`}>{interest}</span> человек
-                идут
+                <span className={`tabular-nums ${interestNumberClass(interest)}`}>{interest}</span> человек идут
               </p>
               {going ? (
                 <p className="mt-4 text-sm text-primary font-semibold">Ты уже в списке ✓</p>
@@ -444,6 +490,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         </SheetContent>
       </Sheet>
 
+      {/* Place sheet */}
       <Sheet open={!!selectedPlace} onOpenChange={(o) => !o && setSelectedPlaceId(null)}>
         <SheetContent
           side="bottom"
@@ -462,41 +509,27 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                 </div>
                 <p className="text-sm text-muted-foreground">{selectedPlace.category}</p>
               </SheetHeader>
-
               <p className="text-sm text-foreground mt-4">
-                <span className="font-semibold tabular-nums">{selectedPlace.totalBeenHere}</span> человек
-                были здесь
+                <span className="font-semibold tabular-nums">{selectedPlace.totalBeenHere}</span> человек были здесь
               </p>
-
               {selectedPlace.hereNow && (
                 <p className="mt-2 text-sm font-medium text-green-400">
                   {selectedPlace.hereNow.name} здесь прямо сейчас 🟢
                 </p>
               )}
-
               <div className="flex gap-2 mt-4">
                 {selectedPlace.recentPeople.slice(0, 3).map((p) => (
                   <div key={p.id} className="flex flex-col items-center gap-1">
                     {p.avatarUrl ? (
-                      <img
-                        src={p.avatarUrl}
-                        alt={p.name}
-                        className="w-11 h-11 rounded-full object-cover border border-white/10"
-                      />
+                      <img src={p.avatarUrl} alt={p.name} className="w-11 h-11 rounded-full object-cover border border-white/10" />
                     ) : (
-                      <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
-                        {p.name[0]}
-                      </div>
+                      <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-xs font-bold">{p.name[0]}</div>
                     )}
-                    <span className="text-[10px] text-muted-foreground truncate max-w-[56px]">
-                      {p.name.split(' ')[0]}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[56px]">{p.name.split(' ')[0]}</span>
                   </div>
                 ))}
               </div>
-
               <p className="text-xs text-muted-foreground mt-3">Твои визиты: {visits}</p>
-
               <button
                 type="button"
                 onClick={() => openCheckIn(selectedPlace, true)}
