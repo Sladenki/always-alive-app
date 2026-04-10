@@ -1,7 +1,7 @@
 import { onboardingNotifications, placeNotificationsMock } from '@/data/mockData';
 import { useAppState } from '@/contexts/AppStateContext';
 import type { NotificationData, NotificationKind } from '@/data/types';
-import { Bell } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Screen from '@/components/layout/Screen';
@@ -34,6 +34,12 @@ export default function NotificationsPage({
     }));
   }, [fomoNotifications, isNotificationRead]);
 
+  const openedPct = useMemo(() => {
+    if (all.length === 0) return 0;
+    const opened = all.filter((n) => n.isRead).length;
+    return Math.round((opened / all.length) * 100);
+  }, [all]);
+
   const prevFirstRef = useRef<string | undefined>(undefined);
   const [springId, setSpringId] = useState<string | null>(null);
 
@@ -51,10 +57,11 @@ export default function NotificationsPage({
   }, [all]);
 
   const handleClick = (n: NotificationData) => {
-    if (n.kind === 'fomo' && n.eventId) { markNotificationRead(n.id); onOpenMatch?.(n.eventId); return; }
-    if (n.kind === 'place_map' && n.placeId) { markNotificationRead(n.id); onOpenMapPlace?.(n.placeId); return; }
-    if (n.kind === 'place_sheet' && n.placeId) { markNotificationRead(n.id); onOpenPlaceSheet?.(n.placeId); return; }
-    if (n.kind === 'place_match' && n.placeId) { markNotificationRead(n.id); onOpenPlaceMatch?.(n.placeId); }
+    markNotificationRead(n.id);
+    if (n.kind === 'fomo' && n.eventId) { onOpenMatch?.(n.eventId); return; }
+    if (n.kind === 'place_map' && n.placeId) { onOpenMapPlace?.(n.placeId); return; }
+    if (n.kind === 'place_sheet' && n.placeId) { onOpenPlaceSheet?.(n.placeId); return; }
+    if (n.kind === 'place_match' && n.placeId) { onOpenPlaceMatch?.(n.placeId); }
   };
 
   if (all.length === 0) {
@@ -72,8 +79,8 @@ export default function NotificationsPage({
   }
 
   return (
-    <Screen title="Уведомления" subtitle="Новые интро, fomo и place-match сценарии">
-      <div className="space-y-2">
+    <Screen title="Уведомления" subtitle="Совпадения, места и напоминания по городу">
+      <div className="space-y-2.5">
         {all.map((notif, i) => {
           const isFomo = notif.kind === 'fomo';
           const isPlace = isPlaceKind(notif.kind);
@@ -99,7 +106,7 @@ export default function NotificationsPage({
               <GlassPanel
                 interactive={clickable}
                 className={cn(
-                  'p-4 flex items-start gap-3',
+                  'p-4 flex items-start gap-3 rounded-2xl',
                   unread && isFomo && 'border-l-[3px] border-l-violet bg-violet/5',
                   unread && isPlace && 'border-l-[3px] border-l-teal bg-teal/5',
                   unread && !isFomo && !isPlace && 'border-l-[3px] border-l-muted',
@@ -112,13 +119,16 @@ export default function NotificationsPage({
                   {notif.icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground leading-snug">{notif.text}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
+                  <p className="text-[15px] text-foreground leading-relaxed">{notif.text}</p>
+                  <p className="text-[12px] text-muted-foreground mt-1">{notif.time}</p>
                 </div>
-                {unread && (
+                {clickable && (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-0.5" aria-hidden />
+                )}
+                {!clickable && unread && (
                   <div className={cn(
                     'w-2 h-2 rounded-full mt-2 shrink-0',
-                    isFomo ? 'bg-violet' : isPlace ? 'bg-teal' : 'bg-muted-foreground',
+                    'bg-muted-foreground',
                   )} />
                 )}
               </GlassPanel>
@@ -126,6 +136,9 @@ export default function NotificationsPage({
           );
         })}
       </div>
+      <p className="mt-8 text-center text-[12px] text-muted-foreground leading-relaxed">
+        Ты открыл {openedPct}% уведомлений
+      </p>
     </Screen>
   );
 }

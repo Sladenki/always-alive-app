@@ -17,7 +17,7 @@ const TEAL = '#14b8a6';
 const BLUE = '#3b82f6';
 const PURPLE = '#7c3aed';
 
-type Phase = 'match' | 'wait' | 'typing' | 'connection' | 'share' | 'done';
+type Phase = 'match' | 'typing' | 'connection' | 'share' | 'done';
 
 interface PlaceMatchFlowOverlayProps {
   place: CityPlaceData;
@@ -163,7 +163,7 @@ function PlaceConnectionAnim({
               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span className="text-[8px] font-semibold text-center leading-tight text-white/95">
+            <span className="text-[11px] font-semibold text-center leading-tight text-white/95">
               {placeShort.length > 9 ? `${placeShort.slice(0, 7)}…` : placeShort}
             </span>
           </div>
@@ -200,7 +200,7 @@ function PlaceConnectionAnim({
         Связь создана
       </p>
       <p className="relative mt-3 text-sm text-white/55 text-center max-w-xs leading-relaxed animate-place-conn-sub">
-        {partnerName} появится в вашем графе — точка места связывает вас
+        {partnerName} появится в твоём графе — точка места вас связывает
       </p>
     </div>
   );
@@ -217,6 +217,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
   const uInit = userInitials(userName || 'Гость');
   const placeShort = place.name.replace(/«|»/g, '');
   const centerLabel = placeShort.length > 14 ? `${placeShort.slice(0, 12)}…` : placeShort;
+  const triangleCenterLabel = place.id === 'p-tipografia' ? 'Антикафе Т.' : centerLabel;
 
   const mergedEvents = mergeGraphNodesWithAcquaintances(graphProfileEventsMock, eventAcquaintances);
   const mergedPlaces = mergePlaceGraphWithAcquaintances(
@@ -229,11 +230,8 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
   const handleMeet = useCallback(() => {
     if (meetStarted.current) return;
     meetStarted.current = true;
-    setPhase('wait');
-    window.setTimeout(() => {
-      setPhase('typing');
-      window.setTimeout(() => setPhase('connection'), 3000);
-    }, 3600);
+    setPhase('typing');
+    window.setTimeout(() => setPhase('connection'), 1500);
   }, []);
 
   useEffect(() => {
@@ -304,7 +302,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
               <div className="rounded-2xl bg-gradient-to-b from-teal-500/10 to-transparent border border-teal-500/20 px-3 pt-4 pb-2">
                 <TrianglePlaceGraph
                   userLabel={uInit.slice(0, 2)}
-                  placeLabel={centerLabel}
+                  placeLabel={triangleCenterLabel}
                   personInitials={person.initials}
                 />
                 <p className="text-center text-[11px] text-muted-foreground pb-3">
@@ -330,7 +328,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
                 <button
                   type="button"
                   onClick={() => handleMeet()}
-                  className="w-full py-3.5 rounded-xl font-semibold text-[#0f172a] bg-teal-400 hover:bg-teal-300 transition-transform active:scale-[0.97]"
+                  className="w-full h-[52px] rounded-[14px] font-semibold text-primary-foreground bg-primary hover:opacity-95 transition-transform active:scale-[0.96]"
                 >
                   Познакомиться
                 </button>
@@ -347,24 +345,6 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
         </div>
       )}
 
-      {phase === 'wait' && (
-        <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#0f1117] px-6 gap-3 animate-in fade-in duration-300">
-          <div className="flex gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="w-2 h-2 rounded-full bg-teal-400/80 animate-pulse"
-                style={{ animationDelay: `${i * 180}ms` }}
-              />
-            ))}
-          </div>
-          <p className="text-sm text-white/85 font-medium text-center">Отправляем приглашение познакомиться…</p>
-          <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed">
-            Пока собеседник не ответил, можно подождать на этом экране
-          </p>
-        </div>
-      )}
-
       {phase === 'typing' && (
         <div className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/75 px-6 animate-in fade-in duration-300">
           <div className="flex flex-col items-center gap-4">
@@ -377,7 +357,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
                 />
               ))}
             </div>
-            <p className="text-white text-sm font-medium">Максим отвечает…</p>
+            <p className="text-white text-[15px] font-medium leading-relaxed">Алина отвечает…</p>
           </div>
         </div>
       )}
@@ -407,7 +387,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
           {shareCard}
           <button
             type="button"
-            className="mt-6 w-full max-w-sm py-3.5 rounded-xl font-semibold text-[#0f172a] bg-teal-400 hover:bg-teal-300 active:scale-[0.97] transition-transform"
+            className="mt-6 w-full max-w-sm h-[52px] rounded-[14px] font-semibold text-primary-foreground bg-primary hover:opacity-95 active:scale-[0.96] transition-transform"
             onClick={handleShareFinish}
           >
             Продолжить
@@ -418,7 +398,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
             onClick={async () => {
               const text = `В Калининграде у меня на графе Nexus ${stats.eventsAndPlaces} точек (события и места) и ${stats.connectionsUnique} человек в круге — без адресов, просто о том, как я живу город.`;
               try {
-                if (navigator.share) await navigator.share({ title: 'Nexus — граф в городе', text });
+                if (navigator.share) await navigator.share({ title: 'Nexus — граф в Калининграде', text });
               } catch {
                 /* */
               }

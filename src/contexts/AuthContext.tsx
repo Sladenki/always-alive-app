@@ -14,9 +14,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userRole, setUserRole] = useState('');
+  /** Демо: сразу «МС», чтобы граф и совпадения в месте показывали правильные инициалы */
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [userName, setUserName] = useState('МС');
+  const [userRole, setUserRole] = useState('Студент КГТУ');
   const [showAuthSheet, setShowAuthSheet] = useState(false);
   const [authPrompt, setAuthPrompt] = useState('');
 

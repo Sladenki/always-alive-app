@@ -77,7 +77,7 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
         {/* Acquaintances */}
         {acquaintances.length > 0 && (
           <div className="rounded-2xl glass p-4 space-y-3" style={{ borderColor: 'hsl(var(--violet) / 0.2)' }}>
-            <h3 className="text-foreground font-semibold text-sm">Ваши знакомства здесь</h3>
+            <h3 className="text-foreground font-semibold text-sm">Твои знакомства здесь</h3>
             <div className="space-y-2.5">
               {acquaintances.map((p) => (
                 <div key={p.id} className="flex items-center gap-3">
@@ -90,7 +90,7 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
                   </div>
                   <button
                     type="button"
-                    onClick={() => toast('Чат скоро появится')}
+                    onClick={() => toast('Чат скоро будет здесь')}
                     className="text-sm font-semibold text-violet shrink-0 active:scale-95 transition-transform"
                   >
                     Написать
@@ -124,7 +124,7 @@ export default function EventDetailPage({ eventId, onBack, onMatchOpen }: EventD
           <div className="flex items-center gap-2.5 text-sm">
             <Users className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className={interestNumberClass(interest)}>
-              <span className="tabular-nums">{interest}</span> интересуются
+              интересуются: <span className="tabular-nums font-medium">{interest}</span>
             </span>
           </div>
         </div>

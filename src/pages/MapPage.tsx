@@ -41,7 +41,7 @@ interface MapPageProps {
   onConsumeMapIntent?: () => void;
 }
 
-const CENTER: [number, number] = [54.7104, 20.481];
+const CENTER: [number, number] = [54.7104, 20.5114];
 
 interface Landmark {
   id: string;
@@ -56,9 +56,9 @@ const LANDMARKS: Landmark[] = [
 ];
 
 function sonarDivIcon(event: EventData, index: number) {
-  const isHot = event.temperature === 'hot';
+  const isHot = event.temperature === 'hot' || event.realSignups >= 20;
   const isWarm = event.temperature === 'warm';
-  const color = isHot ? '#e8622c' : isWarm ? '#d4921a' : '#64748b';
+  const color = isHot ? '#f59e0b' : isWarm ? '#d4921a' : '#64748b';
   const pulseDur = isHot ? 1.5 : 2;
   const delay = ((index * 0.37) % 1.75).toFixed(2);
   const dot = isHot ? 18 : isWarm ? 14 : 12;
@@ -408,7 +408,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                       {event.temperature === 'hot' && <Flame className="w-3 h-3 text-hot" />}
                       <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground leading-snug">
                       {event.time} · {event.location}
                     </p>
                   </button>
@@ -426,7 +426,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                     <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1">
                       <span>{place.icon}</span> {place.name}
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-1">
+                    <p className="text-[11px] text-muted-foreground mt-1">
                       {place.totalBeenHere} были здесь
                     </p>
                   </button>
@@ -480,7 +480,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                 <button
                   type="button"
                   onClick={handleGoing}
-                  className="mt-5 w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110"
+                  className="mt-5 w-full h-[52px] rounded-[14px] bg-primary text-primary-foreground font-semibold text-[15px] transition-[transform,filter] duration-150 active:scale-[0.96] active:brightness-110"
                 >
                   Я иду
                 </button>
@@ -513,8 +513,8 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                 <span className="font-semibold tabular-nums">{selectedPlace.totalBeenHere}</span> человек были здесь
               </p>
               {selectedPlace.hereNow && (
-                <p className="mt-2 text-sm font-medium text-green-400">
-                  {selectedPlace.hereNow.name} здесь прямо сейчас 🟢
+                <p className="mt-2 text-sm font-medium text-[#34d399]">
+                  {selectedPlace.hereNow.name.split(/\s+/)[0]} здесь прямо сейчас 🟢
                 </p>
               )}
               <div className="flex gap-2 mt-4">
@@ -525,7 +525,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
                     ) : (
                       <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-xs font-bold">{p.name[0]}</div>
                     )}
-                    <span className="text-[10px] text-muted-foreground truncate max-w-[56px]">{p.name.split(' ')[0]}</span>
+                    <span className="text-[11px] text-muted-foreground truncate max-w-[56px]">{p.name.split(/\s+/)[0]}</span>
                   </div>
                 ))}
               </div>
@@ -533,7 +533,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
               <button
                 type="button"
                 onClick={() => openCheckIn(selectedPlace, true)}
-                className="mt-6 w-full py-3.5 rounded-xl bg-teal-500 text-[#0f172a] font-semibold transition-transform active:scale-[0.97]"
+                className="mt-6 w-full h-[52px] rounded-[14px] bg-[#00d4aa] text-[#0f172a] font-semibold text-[15px] transition-transform active:scale-[0.96]"
               >
                 Я здесь
               </button>
@@ -568,7 +568,7 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
             ? 'bg-violet-600 text-white'
             : 'bg-card/80 border border-border text-muted-foreground',
         )}
-        title="Dev Mode"
+        title="Режим разработчика"
       >
         <Bug className="w-4 h-4" />
       </button>

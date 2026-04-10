@@ -19,7 +19,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]">
       <div className="glass-solid border-t-0 rounded-t-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.3)]">
-        <div className="max-w-md mx-auto flex items-center justify-around py-2 px-2">
+        <div className="max-w-md mx-auto min-h-[60px] flex items-center justify-around py-1.5 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {APP_TABS.map(({ id, icon: Icon, label }) => {
             const isActive = activeTab === id;
             return (
@@ -46,7 +46,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
                   strokeWidth={isActive ? 2.2 : 1.8}
                 />
                 <span className={cn(
-                  'relative text-[10px] transition-all',
+                  'relative text-[11px] leading-tight transition-all',
                   isActive ? 'font-semibold' : 'font-medium',
                 )}>
                   {label}

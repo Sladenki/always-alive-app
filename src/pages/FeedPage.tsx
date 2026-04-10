@@ -20,7 +20,10 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
   const today = getTodayEvents();
   const tomorrow = getTomorrowEvents();
   const showQuiet = today.length === 0;
-  const laterEvents = mockEvents.filter((e) => e.date !== 'Сегодня' && e.date !== 'Завтра');
+  const dayRank: Record<string, number> = { Пятница: 1, Суббота: 2, Воскресенье: 3 };
+  const laterEvents = mockEvents
+    .filter((e) => e.date !== 'Сегодня' && e.date !== 'Завтра')
+    .sort((a, b) => (dayRank[a.date] ?? 50) - (dayRank[b.date] ?? 50) || a.time.localeCompare(b.time, undefined, { numeric: true }));
   const pulseCount = useCountUp(CITY_GOING_COUNT, 1200);
 
   const showDayEndFooter = !showQuiet || tomorrow.length > 0 || laterEvents.length > 0;
@@ -36,15 +39,15 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
         >
           {pulseCount}
         </span>
-        <p className="relative mt-2.5 text-[15px] text-muted-foreground text-center">
-          человек сегодня куда-то идут
+        <p className="relative mt-2.5 text-[15px] text-muted-foreground text-center leading-relaxed">
+          человек идут сегодня
         </p>
         <div className="pointer-events-none absolute -z-10 top-8 h-20 w-72 rounded-full bg-primary/12 blur-3xl" />
       </div>
 
       {/* Live places strip */}
       <section className="mb-8">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">
+        <p className="text-[12px] text-muted-foreground uppercase tracking-wider mb-3 font-medium">
           Прямо сейчас
         </p>
         <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
@@ -52,7 +55,7 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
             <button key={row.placeId} type="button" onClick={() => onOpenMapPlace(row.placeId)} className="min-w-[150px] shrink-0 text-left">
               <GlassPanel interactive className="p-3.5">
                 <p className="text-[13px] font-semibold text-foreground leading-tight">{row.name}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-[12px] text-muted-foreground mt-1">
                   {row.hereCount} человек
                 </p>
                 {row.friendLine && (
@@ -72,8 +75,8 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
         </div>
       ) : (
         <section>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Сегодня</p>
-          <div className="space-y-3 mb-8">
+          <p className="text-[12px] text-muted-foreground uppercase tracking-wider mb-3 font-medium">Сегодня</p>
+          <div className="space-y-2.5 mb-8">
             {today.map((event, i) => (
               <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i} />
             ))}
@@ -83,8 +86,8 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
 
       {tomorrow.length > 0 && (
         <section>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Завтра</p>
-          <div className="space-y-3 mb-8">
+          <p className="text-[12px] text-muted-foreground uppercase tracking-wider mb-3 font-medium">Завтра</p>
+          <div className="space-y-2.5 mb-8">
             {tomorrow.map((event, i) => (
               <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i + today.length} />
             ))}
@@ -94,8 +97,8 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
 
       {laterEvents.length > 0 && (
         <section>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">Скоро</p>
-          <div className="space-y-3">
+          <p className="text-[12px] text-muted-foreground uppercase tracking-wider mb-3 font-medium">Скоро</p>
+          <div className="space-y-2.5">
             {laterEvents.map((event, i) => (
               <EventCard key={event.id} event={event} onClick={() => onEventClick(event.id)} index={i + today.length + tomorrow.length} />
             ))}

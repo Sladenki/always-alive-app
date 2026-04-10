@@ -9,159 +9,121 @@ import {
   ProfileGraphNode,
 } from './types';
 
-const realPeople: PersonData[] = [
-  { id: 'p1', name: 'Алина К.', role: 'Студентка БФУ', avatarUrl: 'https://i.pravatar.cc/150?img=1' },
-  { id: 'p2', name: 'Максим Д.', role: 'Разработчик', avatarUrl: 'https://i.pravatar.cc/150?img=3' },
-  { id: 'p3', name: 'Катя М.', role: 'Студентка КГТУ', avatarUrl: 'https://i.pravatar.cc/150?img=5' },
-  { id: 'p4', name: 'Артём В.', role: 'Дизайнер', avatarUrl: 'https://i.pravatar.cc/150?img=7' },
-  { id: 'p5', name: 'Даша Л.', role: 'Фотограф', avatarUrl: 'https://i.pravatar.cc/150?img=9' },
-  { id: 'p6', name: 'Иван С.', role: 'Студент БФУ', avatarUrl: 'https://i.pravatar.cc/150?img=11' },
-  { id: 'p7', name: 'Мария Б.', role: 'Маркетолог', avatarUrl: 'https://i.pravatar.cc/150?img=16' },
-  { id: 'p8', name: 'Денис П.', role: 'Музыкант', avatarUrl: 'https://i.pravatar.cc/150?img=12' },
-];
+const AVA = 'https://i.pravatar.cc/150?img=';
+
+export const pAlina: PersonData = { id: 'p-alina', name: 'Алина К.', role: 'Дизайн · КГТУ', avatarUrl: `${AVA}1` };
+export const pMaxim: PersonData = { id: 'p-maxim', name: 'Максим Р.', role: 'Разработчик · БФУ', avatarUrl: `${AVA}3` };
+export const pKatya: PersonData = { id: 'p-katya', name: 'Катя В.', role: 'Студентка · КГТУ', avatarUrl: `${AVA}5` };
+export const pDima: PersonData = { id: 'p-dima', name: 'Дима С.', role: 'Бэкенд · КГТУ', avatarUrl: `${AVA}7` };
+export const pSonya: PersonData = { id: 'p-sonya', name: 'Соня М.', role: 'Продакт · БФУ', avatarUrl: `${AVA}9` };
+
+const realPeople: PersonData[] = [pAlina, pMaxim, pKatya, pDima, pSonya];
 
 export const placeholderPeople: PersonData[] = [
-  { id: 'ph1', name: 'Студент КГТУ', role: 'Ещё не указал кто он', isPlaceholder: true },
-  { id: 'ph2', name: 'Житель Калининграда', role: 'Ещё не указал кто он', isPlaceholder: true },
-  { id: 'ph3', name: 'Студент БФУ', role: 'Ещё не указал кто он', isPlaceholder: true },
+  { id: 'ph1', name: 'Студент КГТУ', role: 'Ещё не указал, кто он', isPlaceholder: true },
+  { id: 'ph2', name: 'Житель Калининграда', role: 'Ещё не указал, кто он', isPlaceholder: true },
+  { id: 'ph3', name: 'Студент БФУ', role: 'Ещё не указал, кто он', isPlaceholder: true },
 ];
 
-/** Людей в городе «сейчас куда-то идут» — для живого блока на ленте */
-export const CITY_GOING_COUNT = 47;
+/** Суммарный «живой» счётчик для героя на ленте */
+export const CITY_GOING_COUNT = 284;
 
 export const mockEvents: EventData[] = [
   {
     id: 'e1',
-    title: 'Вечер настольных игр',
-    description: 'Собираемся играть в настолки: Catan, Codenames, Uno и другие. Приходите с друзьями или находите новых!',
-    location: 'Антикафе «Типография»',
-    address: 'ул. Баранова, 32',
-    lat: 54.7104,
-    lng: 20.4522,
-    date: 'Сегодня',
-    time: '19:00',
-    category: '🎲 Игры',
+    title: 'Хакатон по искусственному интеллекту',
+    description:
+      'Командный хакатон: задачи от партнёров, менторы и демо в конце дня. Регистрация на месте до 10:30.',
+    location: 'КГТУ',
+    address: 'ул. Советская, 1',
+    lat: 54.7138,
+    lng: 20.3967,
+    date: 'Суббота',
+    time: '10:00',
+    category: '🤖 ИИ',
     imageUrl: '',
-    realSignups: 0,
-    views: 12,
-    temperature: 'cold',
-    attendees: [],
+    realSignups: 31,
+    views: 0,
+    temperature: 'hot',
+    attendees: [pAlina, pKatya, pDima, pSonya, pMaxim],
   },
   {
     id: 'e2',
-    title: 'Утренняя пробежка на набережной',
-    description: 'Бежим 5 км вдоль Верхнего озера. Подходит для любого уровня. После — кофе!',
-    location: 'Верхнее озеро',
-    address: 'наб. Верхнего озера',
-    lat: 54.7180,
-    lng: 20.4870,
+    title: 'Джазовый вечер в Доме Искусств',
+    description: 'Акустический джаз, уютный зал и бар. Можно прийти одному или с друзьями.',
+    location: 'Дом искусств',
+    address: 'Московский пр., 18',
+    lat: 54.7121,
+    lng: 20.5045,
     date: 'Сегодня',
-    time: '07:30',
-    category: '🏃 Спорт',
+    time: '19:00',
+    category: '🎷 Джаз',
     imageUrl: '',
-    realSignups: 8,
-    views: 34,
+    realSignups: 14,
+    views: 0,
     temperature: 'warm',
-    attendees: realPeople.slice(0, 8),
+    attendees: [pAlina, pMaxim, pKatya],
   },
   {
     id: 'e3',
-    title: 'Open mic: стендап и поэзия',
-    description: 'Открытый микрофон для всех. Можно читать стихи, шутить или просто слушать. Уютная атмосфера.',
-    location: 'Бар «Лондон»',
-    address: 'Ленинский пр., 18',
-    lat: 54.7066,
-    lng: 20.5100,
-    date: 'Сегодня',
-    time: '20:00',
-    category: '🎤 Творчество',
+    title: 'Питч-сессия стартапов КГТУ',
+    description: 'Короткие питчи проектов, обратная связь от приглашённых экспертов и нетворкинг.',
+    location: 'КГТУ',
+    address: 'ул. Советская, 1',
+    lat: 54.7142,
+    lng: 20.3985,
+    date: 'Пятница',
+    time: '18:00',
+    category: '🚀 Стартапы',
     imageUrl: '',
-    realSignups: 24,
-    views: 89,
-    temperature: 'hot',
-    attendees: realPeople,
+    realSignups: 8,
+    views: 0,
+    temperature: 'warm',
+    attendees: [pKatya, pDima, pSonya],
   },
   {
     id: 'e4',
-    title: 'Воркшоп: основы UX-дизайна',
-    description: 'Практический воркшоп от дизайнеров из Яндекса. Разберём реальные кейсы и прототипирование в Figma.',
+    title: 'Воркшоп по UI/UX дизайну',
+    description: 'Практика в Figma: сетки, компоненты и прототип. Принесите ноутбук.',
     location: 'Коворкинг «Точка»',
     address: 'ул. Черняховского, 56',
     lat: 54.7145,
-    lng: 20.4740,
-    date: 'Завтра',
+    lng: 20.474,
+    date: 'Воскресенье',
     time: '14:00',
-    category: '💻 Образование',
+    category: '💻 Дизайн',
     imageUrl: '',
-    realSignups: 15,
-    views: 52,
+    realSignups: 22,
+    views: 0,
     temperature: 'warm',
-    attendees: realPeople.slice(0, 5),
+    attendees: [pAlina, pMaxim, pSonya],
   },
   {
     id: 'e5',
-    title: 'Кинопоказ на крыше',
-    description: 'Смотрим «Всё везде и сразу» на крыше с проектором. Пледы и горячий шоколад включены.',
-    location: 'Крыша ТЦ «Европа»',
-    address: 'ул. Театральная, 30',
-    lat: 54.7123,
-    lng: 20.5020,
-    date: 'Завтра',
-    time: '21:00',
-    category: '🎬 Кино',
-    imageUrl: '',
-    realSignups: 2,
-    views: 28,
-    temperature: 'cold',
-    attendees: realPeople.slice(0, 2),
-  },
-  {
-    id: 'e6',
-    title: 'Субботний маркет у Кафедрального',
-    description: 'Фермерские продукты, хендмейд, живая музыка. Лучшее место для прогулки на выходных.',
-    location: 'Остров Канта',
-    address: 'ул. Канта, 1',
-    lat: 54.7066,
-    lng: 20.5114,
-    date: 'Суббота',
-    time: '10:00',
-    category: '🛍 Маркет',
+    title: 'Открытая лекция по нейросетям',
+    description: 'Без формулы «для всех»: как устроены большие модели и чем они полезны в учёбе.',
+    location: 'КГТУ',
+    address: 'ул. Советская, 1',
+    lat: 54.7135,
+    lng: 20.3975,
+    date: 'Сегодня',
+    time: '17:00',
+    category: '🧠 Лекция',
     imageUrl: '',
     realSignups: 45,
-    views: 210,
+    views: 0,
     temperature: 'hot',
     attendees: realPeople,
   },
-  {
-    id: 'e7',
-    title: 'Разговорный клуб: English',
-    description: 'Практикуем английский в неформальной обстановке. Все уровни приветствуются. Тема: Travel.',
-    location: 'Кофейня «Brew Bar»',
-    address: 'пр. Мира, 45',
-    lat: 54.7200,
-    lng: 20.4600,
-    date: 'Завтра',
-    time: '18:30',
-    category: '🗣 Языки',
-    imageUrl: '',
-    realSignups: 1,
-    views: 19,
-    temperature: 'cold',
-    attendees: realPeople.slice(0, 1),
-  },
 ];
 
-export const onboardingNotifications: NotificationData[] = [
-  { id: 'n1', icon: '👋', text: 'Добро пожаловать в Nexus — твой город живёт здесь', time: 'сейчас', isRead: false, kind: 'onboarding' },
-  { id: 'n2', icon: '🔥', text: 'Сегодня 3 популярных события рядом с тобой', time: '1 мин', isRead: false, kind: 'onboarding' },
-  { id: 'n3', icon: '📍', text: 'Открой карту и посмотри что происходит', time: '2 мин', isRead: false, kind: 'onboarding' },
-];
+export const onboardingNotifications: NotificationData[] = [];
 
-/** Demo match partner for any «Совпадение» flow */
+/** Демо match partner для «Совпадение» на событии */
 export const demoMatchPerson: MatchPersonData = {
   id: 'gx-alina',
   name: 'Алина',
-  subtitle: 'КГТУ · 2 курс',
+  subtitle: 'Дизайн · КГТУ',
   bio: 'Дизайнер, люблю джаз и кофе',
   initials: 'А',
 };
@@ -170,54 +132,54 @@ export const demoMatchPerson: MatchPersonData = {
 export const demoPlaceMatchPerson: MatchPersonData = {
   id: 'gx-maxim',
   name: 'Максим',
-  subtitle: 'Разработчик',
-  bio: 'Люблю стендап и кофе',
+  subtitle: 'Разработчик · БФУ',
+  bio: 'Сейчас в Типографии, люблю кофе и стендап',
   initials: 'М',
 };
 
-const gpAlina: PersonData = { id: 'gx-alina', name: 'Алина', role: 'Дизайн', avatarUrl: 'https://i.pravatar.cc/150?img=1' };
-const gpMaxim: PersonData = { id: 'gx-maxim', name: 'Максим', role: 'Dev', avatarUrl: 'https://i.pravatar.cc/150?img=3' };
-const gpKatya: PersonData = { id: 'gx-katya', name: 'Катя', role: 'Студентка', avatarUrl: 'https://i.pravatar.cc/150?img=5' };
-const gpDima: PersonData = { id: 'gx-dima', name: 'Дима', role: 'Бэкенд', avatarUrl: 'https://i.pravatar.cc/150?img=7' };
-const gpSonya: PersonData = { id: 'gx-sonya', name: 'Соня', role: 'Маркетинг', avatarUrl: 'https://i.pravatar.cc/150?img=9' };
+const gpAlina: PersonData = { id: 'gx-alina', name: 'Алина К.', role: 'Дизайн · КГТУ', avatarUrl: `${AVA}1` };
+const gpMaxim: PersonData = { id: 'gx-maxim', name: 'Максим Р.', role: 'Разработчик · БФУ', avatarUrl: `${AVA}3` };
+const gpKatya: PersonData = { id: 'gx-katya', name: 'Катя В.', role: 'Студентка · КГТУ', avatarUrl: `${AVA}5` };
+const gpDima: PersonData = { id: 'gx-dima', name: 'Дима С.', role: 'Бэкенд · КГТУ', avatarUrl: `${AVA}7` };
+const gpSonya: PersonData = { id: 'gx-sonya', name: 'Соня М.', role: 'Продакт · БФУ', avatarUrl: `${AVA}9` };
 
-/** Profile graph: attended + upcoming (mock). Sizes / colors derived in UI from connectionCount + isUpcoming */
+/** Узлы событий на графе профиля */
 export const graphProfileEventsMock: GraphEventNodeData[] = [
   {
     id: 'g-jazz',
     shortLabel: 'Джаз',
-    fullTitle: 'Джазовый вечер',
-    dateLabel: '12 марта · 19:00',
+    fullTitle: 'Джазовый вечер в Доме Искусств',
+    dateLabel: 'Сегодня · 19:00',
     connectionCount: 2,
     isUpcoming: false,
-    feedEventIds: ['e3'],
+    feedEventIds: ['e2'],
     people: [gpAlina, gpMaxim],
   },
   {
     id: 'g-hack',
     shortLabel: 'Хакатон',
-    fullTitle: 'Хакатон Kaliningrad.tech',
-    dateLabel: '2 апреля · 10:00',
+    fullTitle: 'Хакатон по искусственному интеллекту',
+    dateLabel: 'Суббота · 10:00',
     connectionCount: 2,
     isUpcoming: false,
-    feedEventIds: ['e2'],
+    feedEventIds: ['e1'],
     people: [gpKatya, gpDima],
   },
   {
     id: 'g-tedx',
     shortLabel: 'TEDx',
-    fullTitle: 'TEDx Kaliningrad',
-    dateLabel: '20 марта · 18:00',
+    fullTitle: 'Питч-сессия стартапов КГТУ',
+    dateLabel: 'Пятница · 18:00',
     connectionCount: 1,
     isUpcoming: false,
-    feedEventIds: ['e6'],
+    feedEventIds: ['e3'],
     people: [gpSonya],
   },
   {
     id: 'g-workshop',
     shortLabel: 'Воркшоп',
-    fullTitle: 'Воркшоп по дизайну',
-    dateLabel: 'Завтра · 14:00',
+    fullTitle: 'Воркшоп по UI/UX дизайну',
+    dateLabel: 'Воскресенье · 14:00',
     connectionCount: 0,
     isUpcoming: true,
     feedEventIds: ['e4'],
@@ -226,16 +188,15 @@ export const graphProfileEventsMock: GraphEventNodeData[] = [
   {
     id: 'g-lecture',
     shortLabel: 'Лекция',
-    fullTitle: 'Лекция о нейросетях',
-    dateLabel: 'Суббота · 16:00',
+    fullTitle: 'Открытая лекция по нейросетям',
+    dateLabel: 'Сегодня · 17:00',
     connectionCount: 0,
     isUpcoming: true,
-    feedEventIds: ['e7'],
+    feedEventIds: ['e5'],
     people: [],
   },
 ];
 
-/** Стартовые визиты пользователя по местам (демо) */
 export const initialPlaceVisitCounts: Record<string, number> = {
   'p-tipografia': 3,
   'p-kgtu': 12,
@@ -299,28 +260,6 @@ export const mockPlaces: CityPlaceData[] = [
     recentPeople: [gpAlina, gpMaxim, gpSonya],
     friendsHaveBeen: true,
   },
-  {
-    id: 'p-ploshad',
-    name: 'Площадь Победы',
-    category: 'Площадь',
-    icon: '📍',
-    lat: 54.7139,
-    lng: 20.5115,
-    totalBeenHere: 920,
-    recentPeople: [gpMaxim, gpKatya, gpDima],
-    friendsHaveBeen: false,
-  },
-  {
-    id: 'p-rybnaya',
-    name: 'Рыбная деревня',
-    category: 'Район',
-    icon: '🐟',
-    lat: 54.7011,
-    lng: 20.5083,
-    totalBeenHere: 412,
-    recentPeople: [gpAlina, gpKatya, gpSonya],
-    friendsHaveBeen: true,
-  },
 ];
 
 /** Узлы мест на графе профиля */
@@ -358,7 +297,7 @@ export const placeNotificationsMock: NotificationData[] = [
   {
     id: 'pn-map',
     icon: '🟢',
-    text: 'Алина сейчас в Типографии — ты рядом?',
+    text: 'Алина сейчас в «Типографии» — ты рядом?',
     time: 'только что',
     isRead: false,
     kind: 'place_map',
@@ -376,11 +315,20 @@ export const placeNotificationsMock: NotificationData[] = [
   {
     id: 'pn-match',
     icon: '🤝',
-    text: 'Максим тоже бывает в Буфете — у вас общее место',
+    text: 'Максим тоже бывает в «Буфете» — общее место на карте',
     time: '1 ч',
     isRead: false,
     kind: 'place_match',
     placeId: 'p-bufet',
+  },
+  {
+    id: 'pn-kgtu',
+    icon: '🎓',
+    text: 'Сегодня у КГТУ лекция и вечером джаз рядом — открыть карту?',
+    time: '2 ч',
+    isRead: false,
+    kind: 'place_map',
+    placeId: 'p-kgtu',
   },
 ];
 
@@ -390,7 +338,7 @@ export const feedLivePlacesMock = [
     placeId: 'p-tipografia' as const,
     name: 'Антикафе «Типография»',
     hereCount: 7,
-    friendLine: 'Алина здесь 🟢' as string | null,
+    friendLine: 'Максим здесь сейчас 🟢' as string | null,
   },
   {
     placeId: 'p-bufet' as const,
@@ -520,7 +468,7 @@ export function getMatchTagLine(event: EventData): string {
   return `${event.title} · ${event.date} ${event.time}`;
 }
 
-/** Short label for the center node in the triangle graph */
+/** Короткая подпись центрального узла в треугольнике совпадения */
 export function getEventCenterNodeLabel(event: EventData): string {
   const t = event.title;
   if (t.length <= 14) return t;
@@ -534,14 +482,15 @@ export function getMatchPersonForEvent(_eventId: string): MatchPersonData {
 export function matchPlacePersonToPersonData(): PersonData {
   return {
     id: demoPlaceMatchPerson.id,
-    name: demoPlaceMatchPerson.name,
+    name: 'Максим Р.',
     role: demoPlaceMatchPerson.subtitle,
+    avatarUrl: pMaxim.avatarUrl,
   };
 }
 
 export function getGraphProfileStats(nodes: GraphEventNodeData[]) {
-  const attended = nodes.filter(n => !n.isUpcoming).length;
-  const upcoming = nodes.filter(n => n.isUpcoming).length;
+  const attended = nodes.filter((n) => !n.isUpcoming).length;
+  const upcoming = nodes.filter((n) => n.isUpcoming).length;
   const connections = nodes.reduce((s, n) => s + n.connectionCount, 0);
   return { attended, upcoming, connections, eventsTotal: nodes.length };
 }
@@ -577,9 +526,11 @@ export function getAttendeesWithPlaceholders(event: EventData): PersonData[] {
 }
 
 export function getTodayEvents(): EventData[] {
-  return mockEvents.filter(e => e.date === 'Сегодня');
+  return mockEvents
+    .filter((e) => e.date === 'Сегодня')
+    .sort((a, b) => a.time.localeCompare(b.time, undefined, { numeric: true }));
 }
 
 export function getTomorrowEvents(): EventData[] {
-  return mockEvents.filter(e => e.date === 'Завтра');
+  return mockEvents.filter((e) => e.date === 'Завтра');
 }

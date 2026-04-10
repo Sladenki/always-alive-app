@@ -6,8 +6,8 @@ import PlaceMatchFlowOverlay from '@/components/PlaceMatchFlowOverlay';
 
 type Phase = 'mood' | 'graph' | 'placeMatch' | 'done';
 
-/** Автопереход с экрана настроения */
-const MOOD_AUTO_MS = 8500;
+/** Автопереход с экрана настроения (как в сценарии демо: ~3 с) */
+const MOOD_AUTO_MS = 3000;
 /** Пауза на анимации «место в графе» перед следующим шагом */
 const GRAPH_HOLD_MS = 5200;
 
@@ -61,14 +61,14 @@ function PlaceAddedGraphAnim({ placeShort, userLabel }: { placeShort: string; us
             strokeWidth="2"
             className="animate-place-node-pop"
           />
-          <text x="256" y="88" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">
+          <text x="256" y="88" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
             {placeShort.length > 12 ? `${placeShort.slice(0, 10)}…` : placeShort}
           </text>
         </svg>
         <p className="animate-place-graph-caption mt-8 text-center text-lg font-semibold text-white leading-snug px-2">
           <span className="text-teal-400">{placeShort}</span>
           <br />
-          <span className="text-base font-medium text-muted-foreground">добавлена в ваш граф</span>
+          <span className="text-base font-medium text-muted-foreground">добавлена в твой граф</span>
         </p>
       </div>
     </div>
@@ -148,7 +148,7 @@ export default function PlaceCheckInFlowOverlay({
                   className="flex flex-col items-center gap-2 rounded-2xl bg-white/[0.04] border border-white/10 py-4 px-1 transition-all hover:bg-white/[0.07] hover:border-teal-500/30 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50"
                 >
                   <span className="text-[1.75rem] leading-none select-none">{m.emoji}</span>
-                  <span className="text-[10px] text-muted-foreground text-center leading-tight font-medium">
+                  <span className="text-[11px] text-muted-foreground text-center leading-tight font-medium">
                     {m.label}
                   </span>
                 </button>

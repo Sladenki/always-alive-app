@@ -26,7 +26,7 @@ export default function DevPanel() {
       >
         <span className="flex items-center gap-1.5">
           <Bug className="w-3.5 h-3.5" />
-          DEV MODE
+          Отладка
         </span>
         {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </button>
@@ -39,7 +39,7 @@ export default function DevPanel() {
               <Crosshair className="w-3 h-3" /> Позиция
             </p>
             {loc.currentPos ? (
-              <p className="font-mono text-[10px]">
+              <p className="font-mono text-[11px]">
                 {loc.currentPos[0].toFixed(4)}, {loc.currentPos[1].toFixed(4)}
               </p>
             ) : (

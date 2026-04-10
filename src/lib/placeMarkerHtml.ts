@@ -34,15 +34,24 @@ export function buildPlaceMarkerHtml(place: CityPlaceData, visitCount: number): 
   const friendsOnly = !userBeen && place.friendsHaveBeen;
   const hereNow = !!place.hereNow;
 
-  const borderColor = userBeen ? 'rgba(255,255,255,0.5)' : friendsOnly ? '#3b82f6' : '#64748b';
-  const innerBg = userBeen ? '#6d28d9' : friendsOnly ? '#1e3a5f' : '#1e293b';
-  const iconColor = userBeen ? '#ffffff' : friendsOnly ? '#93c5fd' : '#cbd5e1';
+  let borderColor = userBeen ? 'rgba(255,255,255,0.5)' : friendsOnly ? '#3b82f6' : '#64748b';
+  let innerBg = userBeen ? '#6d28d9' : friendsOnly ? '#1e3a5f' : '#1e293b';
+  let iconColor = userBeen ? '#ffffff' : friendsOnly ? '#93c5fd' : '#cbd5e1';
+
+  if (hereNow) {
+    innerBg = '#0f172a';
+    borderColor = '#00d4aa';
+    iconColor = '#5eead4';
+  }
 
   const glyph = GLYPHS[glyphKey(place)].replace(/currentColor/g, iconColor);
   const pulseClass = hereNow ? 'map-place-now' : '';
+  const dropShadow = hereNow
+    ? 'drop-shadow(0 0 14px rgba(0,212,170,0.55)) drop-shadow(0 3px 8px rgba(0,0,0,0.45))'
+    : 'drop-shadow(0 3px 8px rgba(0,0,0,0.45))';
 
   return `
-<div class="place-marker-root ${pulseClass}" style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.45))">
+<div class="place-marker-root ${pulseClass}" style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;filter:${dropShadow}">
   <div style="width:40px;height:40px;border-radius:50%;background:${innerBg};border:2.5px solid ${borderColor};display:flex;align-items:center;justify-content:center;box-sizing:border-box;color:${iconColor}">${glyph}</div>
 </div>`;
 }

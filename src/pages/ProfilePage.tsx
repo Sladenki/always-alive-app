@@ -10,7 +10,7 @@ import {
   isPlaceGraphNode,
 } from '@/data/mockData';
 import type { GraphEventNodeData, PersonData, ProfileGraphNode } from '@/data/types';
-import { Search, Lock, Unlock, Eye, CalendarPlus, Sparkles, Users, MapPin, ChevronRight, Star } from 'lucide-react';
+import { Search, Lock, Unlock, Eye, CalendarPlus, Sparkles, Users, Star, MessageCircle } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
@@ -119,7 +119,7 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
           { color: 'bg-violet', label: 'Событие', shape: 'rounded-full' },
           { color: 'bg-teal', label: 'Место', shape: 'rounded-sm' },
         ].map(l => (
-          <span key={l.label} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <span key={l.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span className={cn('w-2 h-2 inline-block', l.color, l.shape)} />
             {l.label}
           </span>
@@ -166,7 +166,7 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
         <circle cx={cx} cy={cy} r={22} fill="hsl(var(--primary) / 0.08)" />
         <circle cx={cx} cy={cy} r={12} fill="url(#pg-sun)" filter="url(#pg-glow)" className="animate-graph-hub-pulse" />
         <circle cx={cx} cy={cy} r={4.5} fill="#fffef9" opacity={0.85} />
-        <text x={cx} y={cy + 32} textAnchor="middle" fill="hsl(var(--foreground) / 0.2)" fontSize="7" fontWeight="700" letterSpacing="0.2em">ТЫ</text>
+        <text x={cx} y={cy + 32} textAnchor="middle" fill="hsl(var(--foreground) / 0.35)" fontSize="11" fontWeight="600" letterSpacing="0.12em">ТЫ</text>
 
         <g transform={`translate(${cx} ${cy})`}>
           <g className="animate-planetary-system-spin">
@@ -202,9 +202,9 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
                         style={{ '--breathe-delay': `${i * 0.45}s`, '--breathe-dur': `${dur}s` } as CSSProperties}>
                         <polygon points={hexPoints(r)} fill="url(#pg-place)" stroke="hsl(var(--teal) / 0.3)" strokeWidth="1.2" />
                         <text x={0} y={3.5} textAnchor="middle" fill="white"
-                          fontSize={node.shortLabel.length > 6 ? 7 : 8.5} fontWeight="600"
+                          fontSize={11} fontWeight="600"
                           style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
-                          {node.shortLabel}
+                          {node.shortLabel.length > 7 ? `${node.shortLabel.slice(0, 6)}…` : node.shortLabel}
                         </text>
                       </g>
                     </g>
@@ -226,9 +226,9 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
                         stroke={isUp ? 'hsl(var(--foreground) / 0.15)' : 'hsl(var(--foreground) / 0.1)'}
                         strokeWidth={isUp ? 1.2 : 1} strokeDasharray={isUp ? '4 3' : undefined} />
                       <text x={0} y={3.5} textAnchor="middle" fill="white"
-                        fontSize={evNode.shortLabel.length > 6 ? 7.5 : 9} fontWeight="600"
+                        fontSize={11} fontWeight="600"
                         style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
-                        {evNode.shortLabel}
+                        {evNode.shortLabel.length > 8 ? `${evNode.shortLabel.slice(0, 7)}…` : evNode.shortLabel}
                       </text>
                     </g>
                   </g>
@@ -239,30 +239,7 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
         </g>
       </svg>
 
-      <p className="text-center text-[10px] text-muted-foreground/40 pb-3">Нажми на узел</p>
-    </div>
-  );
-}
-
-/* ─── Stats ─── */
-function StatsRow({ stats, isAuth }: { stats: ReturnType<typeof getCombinedGraphStats>; isAuth: boolean }) {
-  const spots = useCountUp(stats.eventsAndPlaces, 800, isAuth);
-  const conn = useCountUp(stats.connectionsUnique, 800, isAuth);
-  const up = useCountUp(stats.upcoming, 800, isAuth);
-  const items = [
-    { label: 'Точек', value: spots, icon: MapPin },
-    { label: 'Связей', value: conn, icon: Users },
-    { label: 'Впереди', value: up, icon: CalendarPlus },
-  ];
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      {items.map((s) => (
-        <div key={s.label} className="rounded-2xl glass p-3 text-center">
-          <s.icon className="w-4 h-4 mx-auto text-muted-foreground mb-1.5" />
-          <p className="text-lg font-bold text-foreground tabular-nums">{s.value}</p>
-          <p className="text-[10px] text-muted-foreground">{s.label}</p>
-        </div>
-      ))}
+      <p className="text-center text-[11px] text-muted-foreground/50 pb-3">Нажми на узел</p>
     </div>
   );
 }
@@ -298,6 +275,13 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
   const points = computePoints(stats);
   const levelInfo = getLevel(points);
 
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 5 ? 'Доброй ночи' : hour < 12 ? 'Доброе утро' : hour < 17 ? 'Добрый день' : hour < 23 ? 'Добрый вечер' : 'Доброй ночи';
+
+  const statEventsPlaces = useCountUp(stats.eventsAndPlaces, 800, isAuthenticated);
+  const statConnections = useCountUp(stats.connectionsUnique, 800, isAuthenticated);
+
   if (!isAuthenticated) {
     return (
       <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
@@ -327,14 +311,15 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
     <div className="pb-24 px-4 pt-8 max-w-md mx-auto space-y-4">
       {/* Header */}
       <div className="rounded-2xl glass p-5 animate-fade-up">
+        <p className="text-[13px] text-muted-foreground mb-3">{greeting}</p>
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold text-foreground shrink-0 shadow-lg"
             style={{ background: levelInfo.current.gradient }}>
             {userInitials(userName)}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-foreground truncate">{userName}</h1>
-            <p className="text-sm text-muted-foreground">{userRole}</p>
+            <h1 className="text-[22px] font-medium text-foreground truncate leading-snug">{userName}</h1>
+            <p className="text-[14px] text-muted-foreground leading-relaxed mt-0.5">{userRole}</p>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-foreground shadow-md"
             style={{ background: levelInfo.current.gradient }}>
@@ -344,7 +329,10 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
         </div>
       </div>
 
-      <StatsRow stats={stats} isAuth={isAuthenticated} />
+      <p className="text-center text-[15px] text-muted-foreground leading-relaxed px-1">
+        <span className="font-semibold tabular-nums text-foreground">{statEventsPlaces}</span> событий и мест ·{' '}
+        <span className="font-semibold tabular-nums text-foreground">{statConnections}</span> знакомств
+      </p>
 
       {/* Level progress */}
       <div className="rounded-2xl glass p-4 space-y-3">
@@ -376,7 +364,7 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
 
       {/* Graph */}
       <section className="space-y-2 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-        <h2 className="text-sm font-semibold text-foreground">🌐 Граф связей</h2>
+        <h2 className="text-[15px] font-medium text-foreground leading-snug">🌐 Граф связей</h2>
         <ProfileGraph nodes={mergedNodes} onSelect={setSheetNode} />
       </section>
 
@@ -434,9 +422,18 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{c.role}</p>
+                  <p className="text-[13px] text-muted-foreground truncate">{c.role}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                <button
+                  type="button"
+                  className="shrink-0 text-[13px] font-semibold text-primary px-3 py-2 rounded-xl border border-primary/35 active:scale-[0.96] transition-transform"
+                  onClick={() => toast('Чат скоро будет здесь')}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Написать
+                  </span>
+                </button>
               </div>
             ))}
           </div>
