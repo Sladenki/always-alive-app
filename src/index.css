@@ -582,3 +582,17 @@
   background: linear-gradient(90deg, transparent, hsl(var(--secondary-foreground) / 0.08), transparent);
   animation: shimmer 1.4s ease-in-out infinite;
 }
+
+/* ═══ Day Route ═══ */
+@keyframes route-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.25; }
+  50% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes route-march {
+  to { stroke-dashoffset: -28; }
+}
+
+.day-route-line-animated {
+  animation: route-march 1.2s linear infinite;
+}
