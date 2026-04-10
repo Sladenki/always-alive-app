@@ -238,15 +238,29 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
   const handleTimelineStopTap = useCallback((stop: DayRouteStop) => {
     setActiveTimelineStop(stop.id);
     setFlyCenter([stop.lat, stop.lng]);
-    // Small delay then show near-miss sheet
     const people = getNearMissForStop(stop.id);
+    const openSheet = () => {
+      setNearMissPeople(people);
+      setNearMissStop(stop);
+    };
     if (people.length > 0) {
-      setTimeout(() => {
-        setNearMissPeople(people);
-        setNearMissStop(stop);
-      }, 600);
+      setTimeout(openSheet, 600);
+    } else {
+      openSheet();
     }
   }, []);
+
+  const nextNearMissRouteStop = useMemo(() => {
+    if (!nearMissStop) return null;
+    const idx = mockDayRoute.findIndex((s) => s.id === nearMissStop.id);
+    if (idx < 0 || idx >= mockDayRoute.length - 1) return null;
+    return mockDayRoute[idx + 1];
+  }, [nearMissStop]);
+
+  const goToNextRouteStopFromSheet = useCallback(() => {
+    if (!nextNearMissRouteStop) return;
+    handleRouteStopClick(nextNearMissRouteStop);
+  }, [nextNearMissRouteStop, handleRouteStopClick]);
 
   const PlaceCatIcon = selectedPlace ? categoryPlaceIcon(selectedPlace.category) : MapPin;
   const visits = selectedPlace ? getPlaceVisitCount(selectedPlace.id) : 0;
@@ -441,6 +455,8 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
         people={nearMissPeople}
         open={!!nearMissStop}
         onClose={() => setNearMissStop(null)}
+        nextStop={nextNearMissRouteStop}
+        onGoToNextStop={goToNextRouteStopFromSheet}
       />
 
       {/* Compare routes sheet */}

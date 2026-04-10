@@ -1,16 +1,30 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { DayRouteStop, NearMissPerson } from '@/data/dayRouteData';
 import { cn } from '@/lib/utils';
+import { ChevronRight } from 'lucide-react';
 
 interface NearMissSheetProps {
   stop: DayRouteStop | null;
   people: NearMissPerson[];
   open: boolean;
   onClose: () => void;
+  /** Следующая остановка маршрута (если есть) */
+  nextStop?: DayRouteStop | null;
+  /** Перейти к следующему пункту: карта, таймлайн и шит обновятся */
+  onGoToNextStop?: () => void;
 }
 
-export default function NearMissSheet({ stop, people, open, onClose }: NearMissSheetProps) {
+export default function NearMissSheet({
+  stop,
+  people,
+  open,
+  onClose,
+  nextStop,
+  onGoToNextStop,
+}: NearMissSheetProps) {
   if (!stop) return null;
+
+  const hasNext = Boolean(nextStop && onGoToNextStop);
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -81,11 +95,24 @@ export default function NearMissSheet({ stop, people, open, onClose }: NearMissS
             </p>
           </div>
         ) : (
-          <div className="mt-6 text-center py-6">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-6 text-center py-4 space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Никого не было рядом в это время
             </p>
           </div>
+        )}
+
+        {hasNext && nextStop && (
+          <button
+            type="button"
+            onClick={() => onGoToNextStop?.()}
+            className="mt-4 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-[#00d4aa]/35 bg-[#00d4aa]/[0.08] text-[#5eead4] font-semibold text-sm transition-transform active:scale-[0.97]"
+          >
+            <span className="truncate">
+              Следующий пункт: {nextStop.icon} {nextStop.label}
+            </span>
+            <ChevronRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
+          </button>
         )}
       </SheetContent>
     </Sheet>
