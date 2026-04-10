@@ -10,13 +10,19 @@ import {
   isPlaceGraphNode,
 } from '@/data/mockData';
 import type { GraphEventNodeData, PersonData, ProfileGraphNode } from '@/data/types';
-import { Search, Lock, Unlock, Eye, CalendarPlus, Sparkles, Users, Star, MessageCircle } from 'lucide-react';
-import { useMemo, useState, type CSSProperties } from 'react';
+import { Search, Lock, Unlock, Eye, CalendarPlus, Sparkles, Users, Star, MessageCircle, Route, Trash2 } from 'lucide-react';
+import { useMemo, useState, useEffect, type CSSProperties } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { useCountUp } from '@/hooks/useCountUp';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import {
+  getSavedDayRoutes,
+  removeSavedDayRoute,
+  SAVED_DAYS_UPDATED_EVENT,
+  type SavedDayRouteEntry,
+} from '@/lib/savedDayRoutes';
 
 interface ProfilePageProps {
   onNavigateToFeed: () => void;
@@ -282,6 +288,14 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
   const statEventsPlaces = useCountUp(stats.eventsAndPlaces, 800, isAuthenticated);
   const statConnections = useCountUp(stats.connectionsUnique, 800, isAuthenticated);
 
+  const [savedDayRoutes, setSavedDayRoutes] = useState<SavedDayRouteEntry[]>(() => getSavedDayRoutes());
+  useEffect(() => {
+    const sync = () => setSavedDayRoutes(getSavedDayRoutes());
+    sync();
+    window.addEventListener(SAVED_DAYS_UPDATED_EVENT, sync);
+    return () => window.removeEventListener(SAVED_DAYS_UPDATED_EVENT, sync);
+  }, []);
+
   if (!isAuthenticated) {
     return (
       <div className="pb-24 px-4 pt-8 max-w-md mx-auto">
@@ -333,6 +347,58 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
         <span className="font-semibold tabular-nums text-foreground">{statEventsPlaces}</span> событий и мест ·{' '}
         <span className="font-semibold tabular-nums text-foreground">{statConnections}</span> знакомств
       </p>
+
+      {/* Сохранённые маршруты «Мой день» */}
+      {savedDayRoutes.length > 0 && (
+        <section className="rounded-2xl glass p-4 space-y-3 animate-fade-up">
+          <h3 className="text-[15px] font-medium text-foreground flex items-center gap-2">
+            <Route className="w-4 h-4 text-teal" />
+            Сохранённые маршруты дня
+          </h3>
+          <p className="text-[12px] text-muted-foreground leading-relaxed">
+            Маршруты из карты («Мой день» → «Сохранить день»), только на этом устройстве.
+          </p>
+          <div className="space-y-2">
+            {savedDayRoutes.map((entry) => (
+              <div
+                key={entry.id}
+                className="rounded-xl border border-white/[0.06] bg-foreground/[0.02] p-3 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{entry.dateLabelRu}</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">
+                      {entry.stopCount} {entry.stopCount === 1 ? 'точка' : entry.stopCount < 5 ? 'точки' : 'точек'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    aria-label="Удалить запись"
+                    onClick={() => {
+                      removeSavedDayRoute(entry.id);
+                      toast('Запись удалена');
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {entry.stops.map((s) => (
+                    <span
+                      key={s.id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-teal-500/10 border border-teal-500/20 px-2 py-1 text-[11px] text-foreground/90"
+                    >
+                      <span>{s.icon}</span>
+                      <span className="truncate max-w-[140px]">{s.label}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Level progress */}
       <div className="rounded-2xl glass p-4 space-y-3">

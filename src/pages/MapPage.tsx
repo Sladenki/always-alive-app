@@ -20,6 +20,8 @@ import { interestNumberClass } from '@/lib/interestText';
 import PlaceCheckInFlowOverlay from '@/components/PlaceCheckInFlowOverlay';
 import { buildPlaceMarkerHtml } from '@/lib/placeMarkerHtml';
 import { cn } from '@/lib/utils';
+import { appendSavedDayRoute } from '@/lib/savedDayRoutes';
+import { toast } from 'sonner';
 
 // Day route imports
 import { mockDayRoute, getNearMissForStop } from '@/data/dayRouteData';
@@ -466,7 +468,16 @@ export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }:
       {showSaveNotif && !daySaved && (
         <SaveDayNotification
           stops={mockDayRoute}
-          onSave={() => { setDaySaved(true); setShowSaveNotif(false); }}
+          onSave={() => {
+            appendSavedDayRoute(
+              mockDayRoute.map((s) => ({ id: s.id, icon: s.icon, label: s.label })),
+            );
+            setDaySaved(true);
+            setShowSaveNotif(false);
+            toast.success('Маршрут дня сохранён', {
+              description: 'Список — в профиле, блок «Сохранённые маршруты дня».',
+            });
+          }}
           onDismiss={() => setShowSaveNotif(false)}
         />
       )}

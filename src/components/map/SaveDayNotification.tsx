@@ -34,6 +34,9 @@ export default function SaveDayNotification({ stops, onSave, onDismiss }: SaveDa
         <p className="text-xs text-muted-foreground mt-0.5">
           Сохранить в твой граф?
         </p>
+        <p className="text-[11px] text-muted-foreground/70 mt-1.5 leading-relaxed">
+          Запись хранится только на этом устройстве (локально в браузере).
+        </p>
         <div className="flex gap-2 mt-3">
           <button
             type="button"
