@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { DayRouteStop, NearMissPerson } from '@/data/dayRouteData';
 import { cn } from '@/lib/utils';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Share2 } from 'lucide-react';
+import NearMissShareCard from '@/components/NearMissShareCard';
 
 interface NearMissSheetProps {
   stop: DayRouteStop | null;
@@ -22,6 +24,7 @@ export default function NearMissSheet({
   nextStop,
   onGoToNextStop,
 }: NearMissSheetProps) {
+  const [shareTarget, setShareTarget] = useState<{ place: string; delta: string } | null>(null);
   if (!stop) return null;
 
   const hasNext = Boolean(nextStop && onGoToNextStop);
@@ -89,6 +92,22 @@ export default function NearMissSheet({
             >
               Познакомиться сейчас
             </button>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                type="button"
+                className="flex-1 py-3.5 rounded-xl bg-amber-500 text-[#0f172a] font-semibold transition-transform active:scale-[0.97] text-sm"
+              >
+                Познакомиться сейчас
+              </button>
+              <button
+                type="button"
+                onClick={() => setShareTarget({ place: stop.label, delta: people[0]?.deltaLabel || '' })}
+                className="px-4 py-3.5 rounded-xl border border-white/10 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
 
             <p className="mt-3 text-center text-[11px] text-muted-foreground/70">
               Были в одном месте — и не встретились. Исправим?
