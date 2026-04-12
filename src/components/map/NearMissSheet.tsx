@@ -135,5 +135,13 @@ export default function NearMissSheet({
         )}
       </SheetContent>
     </Sheet>
+    {shareTarget && (
+      <NearMissShareCard
+        placeName={shareTarget.place}
+        deltaMinutes={shareTarget.delta}
+        onClose={() => setShareTarget(null)}
+      />
+    )}
+    </>
   );
 }
