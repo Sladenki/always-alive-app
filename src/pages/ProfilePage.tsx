@@ -433,6 +433,20 @@ export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer'
               <Lock className="w-3.5 h-3.5 shrink-0" />
               <span><span className="text-foreground/80 font-medium">Ур. {levelInfo.next.level}:</span> {levelInfo.next.unlock}</span>
             </div>
+            {levelInfo.next && (
+              <p className="text-[12px] text-primary font-medium mt-1">
+                Ещё {levelInfo.next.minXP - xp} XP до {levelInfo.next.title}
+              </p>
+            )}
+            {/* XP hints */}
+            <details className="mt-2">
+              <summary className="text-[11px] text-muted-foreground/60 cursor-pointer hover:text-muted-foreground transition-colors">
+                Как получить XP
+              </summary>
+              <ul className="mt-1.5 space-y-0.5 text-[11px] text-muted-foreground">
+                {XP_HINTS.map((h) => <li key={h}>{h}</li>)}
+              </ul>
+            </details>
           </>
         ) : (
           <div className="flex items-center gap-2 text-xs text-primary">
