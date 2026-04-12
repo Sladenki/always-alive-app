@@ -7,8 +7,10 @@ import BottomNav from '@/components/BottomNav';
 import MatchFlowOverlay from '@/components/MatchFlowOverlay';
 import PlaceMatchFlowOverlay from '@/components/PlaceMatchFlowOverlay';
 import OpeningSplash from '@/components/OpeningSplash';
+import OnboardingFlow, { type PrivacyMode } from '@/components/OnboardingFlow';
 import DevPanel from '@/components/DevPanel';
 import EveningRecallOverlay from '@/components/EveningRecallOverlay';
+import EveningDigest from '@/components/EveningDigest';
 import SmartModePrompt from '@/components/SmartModePrompt';
 import PlaceSuggestionToast from '@/components/PlaceSuggestionToast';
 import FeedPage from '@/pages/FeedPage';
@@ -21,6 +23,16 @@ import { mockEvents, getPlaceById } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { type TabId } from '@/config/navigation';
 
+const ONBOARDED_KEY = 'nexus_onboarded';
+
+function isOnboarded() {
+  try { return localStorage.getItem(ONBOARDED_KEY) === '1'; } catch { return false; }
+}
+
+function getStoredPrivacy(): PrivacyMode {
+  try { return (localStorage.getItem('nexus_privacy') as PrivacyMode) || 'observer'; } catch { return 'observer'; }
+}
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>('feed');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -28,17 +40,25 @@ const Index = () => {
   const [matchPlaceId, setMatchPlaceId] = useState<string | null>(null);
   const [mapIntent, setMapIntent] = useState<MapIntent | null>(null);
   const [splashActive, setSplashActive] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(!isOnboarded());
+  const [privacyMode, setPrivacyMode] = useState<PrivacyMode>(getStoredPrivacy());
 
   const finishSplash = useCallback(() => setSplashActive(false), []);
   const consumeMapIntent = useCallback(() => setMapIntent(null), []);
 
-  const handleEventClick = (id: string) => {
-    setSelectedEventId(id);
-  };
+  const handlePrivacyChange = useCallback((m: PrivacyMode) => {
+    setPrivacyMode(m);
+    try { localStorage.setItem('nexus_privacy', m); } catch {}
+  }, []);
 
-  const handleBack = () => {
-    setSelectedEventId(null);
-  };
+  const handleOnboardingComplete = useCallback((data: { role: string; uni?: string; privacyMode: PrivacyMode }) => {
+    handlePrivacyChange(data.privacyMode);
+    try { localStorage.setItem(ONBOARDED_KEY, '1'); } catch {}
+    setShowOnboarding(false);
+  }, [handlePrivacyChange]);
+
+  const handleEventClick = (id: string) => setSelectedEventId(id);
+  const handleBack = () => setSelectedEventId(null);
 
   const matchEvent = matchEventId ? mockEvents.find((e) => e.id === matchEventId) : undefined;
   const matchPlace = matchPlaceId ? getPlaceById(matchPlaceId) : undefined;
@@ -66,6 +86,7 @@ const Index = () => {
           <FeedPage
             onEventClick={handleEventClick}
             onOpenMapPlace={(placeId) => openMapByPlace(placeId)}
+            privacyMode={privacyMode}
           />
         );
       case 'map':
@@ -74,6 +95,8 @@ const Index = () => {
             onEventClick={handleEventClick}
             mapIntent={mapIntent}
             onConsumeMapIntent={consumeMapIntent}
+            privacyMode={privacyMode}
+            onPrivacyChange={handlePrivacyChange}
           />
         );
       case 'myevents':
@@ -88,12 +111,19 @@ const Index = () => {
           />
         );
       case 'profile':
-        return <ProfilePage onNavigateToFeed={() => setActiveTab('feed')} />;
+        return (
+          <ProfilePage
+            onNavigateToFeed={() => setActiveTab('feed')}
+            privacyMode={privacyMode}
+            onPrivacyChange={handlePrivacyChange}
+          />
+        );
       default:
         return (
           <FeedPage
             onEventClick={handleEventClick}
             onOpenMapPlace={(placeId) => openMapByPlace(placeId)}
+            privacyMode={privacyMode}
           />
         );
     }
@@ -104,10 +134,15 @@ const Index = () => {
       <AppStateProvider>
         <LocationProvider>
           <OpeningSplash active={splashActive} onComplete={finishSplash} />
+
+          {!splashActive && showOnboarding && (
+            <OnboardingFlow onComplete={handleOnboardingComplete} />
+          )}
+
           <div
             className={cn(
               'min-h-screen bg-background transition-opacity duration-500 ease-out overflow-x-hidden',
-              splashActive ? 'opacity-0' : 'opacity-100',
+              (splashActive || showOnboarding) ? 'opacity-0 pointer-events-none' : 'opacity-100',
             )}
           >
             <div
@@ -132,6 +167,7 @@ const Index = () => {
             <AuthSheet />
             <DevPanel />
             <EveningRecallOverlay />
+            <EveningDigest privacyMode={privacyMode} onSaveDay={() => {}} />
             <SmartModePrompt />
             <PlaceSuggestionToast />
           </div>

@@ -6,17 +6,21 @@ import {
   feedLivePlacesMock,
 } from '@/data/mockData';
 import EventCard from '@/components/EventCard';
+import DailyQuestionCard from '@/components/DailyQuestionCard';
+import { PrivacyBanner } from '@/components/PrivacyModeControl';
 import { Moon } from 'lucide-react';
 import { useCountUp } from '@/hooks/useCountUp';
 import Screen from '@/components/layout/Screen';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import type { PrivacyMode } from '@/components/OnboardingFlow';
 
 interface FeedPageProps {
   onEventClick: (id: string) => void;
   onOpenMapPlace: (placeId: string) => void;
+  privacyMode?: PrivacyMode;
 }
 
-export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps) {
+export default function FeedPage({ onEventClick, onOpenMapPlace, privacyMode = 'observer' }: FeedPageProps) {
   const today = getTodayEvents();
   const tomorrow = getTomorrowEvents();
   const showQuiet = today.length === 0;
@@ -30,6 +34,13 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
 
   return (
     <Screen>
+      {/* Privacy banner */}
+      {privacyMode !== 'open' && (
+        <div className="mb-4">
+          <PrivacyBanner mode={privacyMode} />
+        </div>
+      )}
+
       {/* Hero pulse */}
       <div className="relative flex flex-col items-center justify-center mb-8 min-h-[130px]">
         <div className="pointer-events-none absolute w-28 h-28 rounded-full bg-primary/8 animate-breathe" aria-hidden />
@@ -65,6 +76,11 @@ export default function FeedPage({ onEventClick, onOpenMapPlace }: FeedPageProps
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Daily question */}
+      <section className="mb-6">
+        <DailyQuestionCard />
       </section>
 
       {showQuiet ? (

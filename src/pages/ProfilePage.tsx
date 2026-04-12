@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
+import PrivacyModeControl, { PrivacyBanner } from '@/components/PrivacyModeControl';
 import {
   graphProfileEventsMock,
   graphProfilePlacesMock,
@@ -26,6 +27,8 @@ import {
 
 interface ProfilePageProps {
   onNavigateToFeed: () => void;
+  privacyMode?: import('@/components/OnboardingFlow').PrivacyMode;
+  onPrivacyChange?: (m: import('@/components/OnboardingFlow').PrivacyMode) => void;
 }
 
 /* ─── Level system ─── */
@@ -34,46 +37,49 @@ interface GraphLevel {
   level: number;
   title: string;
   emoji: string;
-  minPoints: number;
+  minXP: number;
   gradient: string;
   unlock: string;
   unlockIcon: typeof Eye;
 }
 
 const LEVELS: GraphLevel[] = [
-  { level: 1, title: 'Новичок', emoji: '🌱', minPoints: 0,
-    gradient: 'linear-gradient(135deg, hsl(160 60% 22%), hsl(160 70% 38%))',
-    unlock: 'Базовый профиль и лента', unlockIcon: Users },
-  { level: 2, title: 'Знакомый', emoji: '🤝', minPoints: 3,
+  { level: 1, title: 'Новичок', emoji: '🌱', minXP: 0,
+    gradient: 'linear-gradient(135deg, hsl(220 10% 30%), hsl(220 10% 45%))',
+    unlock: 'Базовые функции', unlockIcon: Users },
+  { level: 2, title: 'Свой человек', emoji: '🤝', minXP: 11,
     gradient: 'linear-gradient(135deg, hsl(200 60% 25%), hsl(200 75% 48%))',
-    unlock: 'Видишь кто идёт на события', unlockIcon: Users },
-  { level: 3, title: 'Свой человек', emoji: '👁', minPoints: 7,
+    unlock: 'Видишь кто анонимно смотрел профиль', unlockIcon: Eye },
+  { level: 3, title: 'Душа города', emoji: '💜', minXP: 31,
     gradient: 'linear-gradient(135deg, hsl(263 60% 30%), hsl(263 70% 55%))',
-    unlock: 'Кто смотрел твой профиль', unlockIcon: Eye },
-  { level: 4, title: 'Связной', emoji: '⚡', minPoints: 12,
+    unlock: 'Можешь создавать события', unlockIcon: CalendarPlus },
+  { level: 4, title: 'Легенда', emoji: '🔥', minXP: 61,
     gradient: 'linear-gradient(135deg, hsl(35 60% 28%), hsl(35 80% 50%))',
-    unlock: 'Приоритет в подборе', unlockIcon: Sparkles },
-  { level: 5, title: 'Организатор', emoji: '🚀', minPoints: 18,
-    gradient: 'linear-gradient(135deg, hsl(340 60% 30%), hsl(340 75% 50%))',
-    unlock: 'Создавай свои события', unlockIcon: CalendarPlus },
+    unlock: 'Твои моменты живут 30 дней вместо 7', unlockIcon: Sparkles },
 ];
 
-function getLevel(pts: number) {
+function getLevel(xp: number) {
   let idx = 0;
   for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (pts >= LEVELS[i].minPoints) { idx = i; break; }
+    if (xp >= LEVELS[i].minXP) { idx = i; break; }
   }
   const current = LEVELS[idx];
   const next = idx < LEVELS.length - 1 ? LEVELS[idx + 1] : null;
   const progress = next
-    ? Math.min(100, ((pts - current.minPoints) / (next.minPoints - current.minPoints)) * 100)
+    ? Math.min(100, ((xp - current.minXP) / (next.minXP - current.minXP)) * 100)
     : 100;
   return { current, next, progress };
 }
 
-function computePoints(s: { connectionsUnique: number; eventsAndPlaces: number }) {
-  return s.connectionsUnique + Math.floor(s.eventsAndPlaces * 0.5);
-}
+/** Mock: 18 XP (Level 2) */
+const MOCK_XP = 18;
+
+const XP_HINTS = [
+  '+1 XP — посетил новое место',
+  '+2 XP — сохранил день в граф',
+  '+3 XP — познакомился с кем-то',
+  '+5 XP — сходил на событие',
+];
 
 function userInitials(name: string) {
   const p = name.trim().split(/\s+/);
@@ -251,7 +257,7 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
 }
 
 /* ─── Main ─── */
-export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
+export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer', onPrivacyChange }: ProfilePageProps) {
   const { isAuthenticated, userName, userRole } = useAuth();
   const { eventAcquaintances, placeAcquaintances, placeVisitCounts } = useAppState();
   const [sheetNode, setSheetNode] = useState<ProfileGraphNode | null>(null);
@@ -278,8 +284,8 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
     return Array.from(people.values()).slice(0, 12);
   }, [mergedNodes]);
 
-  const points = computePoints(stats);
-  const levelInfo = getLevel(points);
+  const xp = MOCK_XP;
+  const levelInfo = getLevel(xp);
 
   const hour = new Date().getHours();
   const greeting =
@@ -343,6 +349,14 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
         </div>
       </div>
 
+      {/* Privacy mode control */}
+      {onPrivacyChange && (
+        <div className="space-y-2 animate-fade-up">
+          <PrivacyModeControl mode={privacyMode} onChange={onPrivacyChange} />
+          <PrivacyBanner mode={privacyMode} />
+        </div>
+      )}
+
       <p className="text-center text-[15px] text-muted-foreground leading-relaxed px-1">
         <span className="font-semibold tabular-nums text-foreground">{statEventsPlaces}</span> событий и мест ·{' '}
         <span className="font-semibold tabular-nums text-foreground">{statConnections}</span> знакомств
@@ -404,14 +418,14 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
       <div className="rounded-2xl glass p-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-foreground">Прогресс</span>
-          <span className="text-xs text-muted-foreground tabular-nums">{points} очков</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{xp} XP</span>
         </div>
         {levelInfo.next ? (
           <>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">До «{levelInfo.next.title}»</span>
-                <span className="text-foreground font-medium tabular-nums">{levelInfo.next.minPoints - points} ост.</span>
+                <span className="text-foreground font-medium tabular-nums">{levelInfo.next.minXP - xp} XP ост.</span>
               </div>
               <Progress value={levelInfo.progress} className="h-1.5 bg-secondary" />
             </div>
@@ -419,6 +433,20 @@ export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
               <Lock className="w-3.5 h-3.5 shrink-0" />
               <span><span className="text-foreground/80 font-medium">Ур. {levelInfo.next.level}:</span> {levelInfo.next.unlock}</span>
             </div>
+            {levelInfo.next && (
+              <p className="text-[12px] text-primary font-medium mt-1">
+                Ещё {levelInfo.next.minXP - xp} XP до {levelInfo.next.title}
+              </p>
+            )}
+            {/* XP hints */}
+            <details className="mt-2">
+              <summary className="text-[11px] text-muted-foreground/60 cursor-pointer hover:text-muted-foreground transition-colors">
+                Как получить XP
+              </summary>
+              <ul className="mt-1.5 space-y-0.5 text-[11px] text-muted-foreground">
+                {XP_HINTS.map((h) => <li key={h}>{h}</li>)}
+              </ul>
+            </details>
           </>
         ) : (
           <div className="flex items-center gap-2 text-xs text-primary">
