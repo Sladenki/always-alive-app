@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
+import PrivacyModeControl, { PrivacyBanner } from '@/components/PrivacyModeControl';
 import {
   graphProfileEventsMock,
   graphProfilePlacesMock,
