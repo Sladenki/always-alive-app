@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
-import { Menu, Send, X } from 'lucide-react';
+import { Lock, Menu, Send, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInViewOnce } from '@/hooks/useInViewOnce';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -10,6 +10,21 @@ const VIOLET = '#7c3aed';
 const TEAL = '#00d4aa';
 const TEXT = '#F1F5F9';
 const MUTED = 'rgba(241,245,249,0.55)';
+
+/** Стоковые портреты (Unsplash) — иллюстрация кейса на лендинге. */
+const NEAR_MISS_STORY = {
+  place: 'Кофейня «Буфет»',
+  placeDetail: 'Ленинский · среда',
+  herFirstName: 'Алина',
+  herHint: 'КГТУ · дизайн · джаз по вечерам',
+  herPhoto:
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=176&h=176&fit=crop&crop=faces&q=85',
+  youPhoto:
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=176&h=176&fit=crop&crop=faces&q=85',
+  sheLeft: '16:28',
+  youArrived: '16:40',
+  gapMinutes: '12–18',
+} as const;
 
 type Dot = { x: number; y: number; kind: 'place' | 'person'; id: string };
 
@@ -160,88 +175,232 @@ function IconAlmostLines() {
 
 function SectionNearMiss() {
   const { ref, visible } = useInViewOnce<HTMLDivElement>('0px 0px -12% 0px');
+  const glowId = useId().replace(/:/g, '');
+  const fomoCount = useCountUp(94, 2000, visible);
+
+  const pinYou = { left: (50 / 400) * 100, top: (228 / 300) * 100 };
+  const pinHer = { left: (338 / 400) * 100, top: (42 / 300) * 100 };
+  const pulse = { left: (212 / 400) * 100, top: (96 / 300) * 100 };
 
   return (
-    <section className="relative py-24 px-4 overflow-hidden" style={{ backgroundColor: '#06060b' }}>
+    <section className="relative py-24 sm:py-28 px-4 sm:px-6 overflow-hidden" style={{ backgroundColor: '#06060b' }}>
       <div
         ref={ref}
         className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center"
       >
-        <div className="relative aspect-[4/3] max-h-[340px] rounded-2xl border border-white/[0.06] bg-[#08080f] overflow-hidden">
-          <svg viewBox="0 0 400 300" className="w-full h-full" aria-hidden>
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="4" result="b" />
-                <feMerge>
-                  <feMergeNode in="b" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-            <rect width="400" height="300" fill="#07070e" />
-            <path
-              d="M40 220 Q120 200 200 180 T360 140"
-              fill="none"
-              stroke="rgba(0,212,170,0.12)"
-              strokeWidth="1"
-            />
-            <path
-              d="M320 240 Q220 120 80 60"
-              fill="none"
-              stroke="rgba(124,58,237,0.12)"
-              strokeWidth="1"
-            />
-            <path
-              className={cn('nexus-route-path', visible && 'nexus-route-path--draw')}
-              d="M50 230 C120 200 180 100 210 95"
-              fill="none"
-              stroke={TEAL}
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            />
-            <path
-              className={cn(
-                'nexus-route-path',
-                visible && 'nexus-route-path--draw nexus-route-path--draw-delay',
-              )}
-              d="M340 40 C280 80 240 160 215 98"
-              fill="none"
-              stroke={VIOLET}
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            />
-            <circle
-              cx="212"
-              cy="96"
-              r="14"
-              fill="#f59e0b"
-              opacity="0.25"
-              className={visible ? 'animate-nexus-amber-glow' : ''}
-              style={{ transformOrigin: '212px 96px' }}
-              filter="url(#glow)"
-            />
-            <circle cx="212" cy="96" r="5" fill="#fbbf24" opacity={visible ? 0.95 : 0} />
-          </svg>
-          <div
-            className={cn(
-              'absolute left-1/2 top-[31%] -translate-x-1/2 px-3 py-1 rounded-md text-[11px] font-medium tracking-wide',
-              'bg-black/55 border border-amber-500/30 text-amber-100/95 backdrop-blur-sm transition-opacity duration-700',
-              visible ? 'opacity-100' : 'opacity-0',
-            )}
-            style={{ transitionDelay: visible ? '1.4s' : '0s' }}
-          >
-            Вы почти встретились сегодня
+        <div className="order-2 lg:order-1 space-y-6 lg:space-y-8" style={{ color: TEXT }}>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-400/90 mb-3">
+              Реальный сценарий
+            </p>
+            <h2 className="text-[clamp(1.65rem,3.5vw,2.35rem)] font-semibold tracking-[-0.02em] leading-[1.12] text-[#F1F5F9]">
+              Ты сел за кофе там, где{' '}
+              <span className="text-amber-200/95">она была четверть часа назад</span>
+            </h2>
+          </div>
+
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c12]/90 p-5 sm:p-6 space-y-4 backdrop-blur-sm">
+            <p className="text-sm font-semibold text-[#00d4aa]">{NEAR_MISS_STORY.place}</p>
+            <p className="text-sm leading-relaxed text-slate-400">
+              <span className="text-slate-200 font-medium">{NEAR_MISS_STORY.herFirstName}</span> заказала раф и сидела
+              у окна до <span className="text-slate-200 tabular-nums">{NEAR_MISS_STORY.sheLeft}</span>. Ты зашёл за
+              латте в <span className="text-slate-200 tabular-nums">{NEAR_MISS_STORY.youArrived}</span> — одно и то же
+              место, почти соседние «окна» по времени. В реальности вы могли бы пересечься в очереди у стойки.
+            </p>
+            <ul className="text-[13px] leading-relaxed text-slate-500 space-y-2 border-t border-white/[0.06] pt-4">
+              <li className="flex gap-2">
+                <span className="text-[#7c3aed] shrink-0">→</span>
+                Nexus фиксирует такие интервалы автоматически — без чек-инов и «кто здесь».
+              </li>
+              <li className="flex gap-2">
+                <span className="text-amber-400 shrink-0">!</span>
+                Пока ты не открыл день в приложении, это просто кофе. После — имя, контекст и аккуратный повод
+                написать первым.
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-lg sm:text-xl font-semibold tracking-tight text-[#F1F5F9]">
+              <span className="tabular-nums text-amber-300">{NEAR_MISS_STORY.gapMinutes}</span> минут между вами
+            </p>
+            <p className="text-base leading-relaxed text-slate-400 max-w-lg">
+              Сегодня похожих «почти» по городу — уже{' '}
+              <span className="text-[#00d4aa] font-semibold tabular-nums">{fomoCount}</span>. Часть из них — люди
+              из твоих вузов и мест.{' '}
+              <span className="text-slate-300">Один из них мог сидеть за соседним столом.</span>
+            </p>
+            <p className="text-sm text-slate-500 max-w-lg leading-relaxed">
+              Nexus показывает такие совпадения только в рамках приватности — ты решаешь, идти в диалог или оставить
+              как тихий сигнал дня.
+            </p>
           </div>
         </div>
 
-        <div className="space-y-6" style={{ color: TEXT }}>
-          <p className="text-4xl sm:text-5xl font-semibold tracking-tight">15 минут</p>
-          <p className="text-base leading-relaxed max-w-md" style={{ color: MUTED }}>
-            на столько вы разминулись с Алиной в кофейне «Буфет» сегодня
+        <div className="order-1 lg:order-2 relative w-full max-w-[480px] mx-auto lg:max-w-none">
+          <p className="text-center lg:text-left text-[11px] uppercase tracking-[0.16em] text-slate-500 mb-3">
+            {NEAR_MISS_STORY.placeDetail}
           </p>
-          <p className="text-lg leading-relaxed text-[#F1F5F9]/88 max-w-lg">
-            Nexus видит эти моменты. Ты решаешь — написать или нет.
-          </p>
+          <div className="relative aspect-[4/3] max-h-[min(92vw,380px)] lg:max-h-[400px] rounded-2xl border border-white/[0.08] bg-[#08080f] shadow-[0_24px_80px_-24px_rgba(0,0,0,0.85)] overflow-visible isolate">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden bg-[#08080f]">
+            <svg viewBox="0 0 400 300" className="w-full h-full" aria-hidden>
+              <defs>
+                <filter id={`${glowId}-glow`}>
+                  <feGaussianBlur stdDeviation="4" result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <pattern id={`${glowId}-grid`} width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+              <rect width="400" height="300" fill="#07070e" />
+              <rect width="400" height="300" fill={`url(#${glowId}-grid)`} opacity="0.6" />
+              <path
+                d="M40 220 Q120 200 200 180 T360 140"
+                fill="none"
+                stroke="rgba(0,212,170,0.1)"
+                strokeWidth="1"
+              />
+              <path
+                d="M320 240 Q220 120 80 60"
+                fill="none"
+                stroke="rgba(124,58,237,0.1)"
+                strokeWidth="1"
+              />
+              <path
+                className={cn('nexus-route-path', visible && 'nexus-route-path--draw')}
+                d="M50 230 C120 200 180 100 210 95"
+                fill="none"
+                stroke={TEAL}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+              <path
+                className={cn(
+                  'nexus-route-path',
+                  visible && 'nexus-route-path--draw nexus-route-path--draw-delay',
+                )}
+                d="M340 40 C280 80 240 160 215 98"
+                fill="none"
+                stroke={VIOLET}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+              <circle
+                cx="212"
+                cy="96"
+                r="18"
+                fill="#f59e0b"
+                opacity="0.2"
+                className={visible ? 'animate-nexus-amber-glow' : ''}
+                style={{ transformOrigin: '212px 96px' }}
+                filter={`url(#${glowId}-glow)`}
+              />
+              <circle cx="212" cy="96" r="6" fill="#fbbf24" opacity={visible ? 0.95 : 0} />
+            </svg>
+            </div>
+
+            {/* Ты — стоковое фото, маршрут бирюзовый */}
+            <div
+              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
+              style={{ left: `${pinYou.left}%`, top: `${pinYou.top}%` }}
+            >
+              <div
+                className={cn(
+                  'relative rounded-full p-[2px] bg-gradient-to-br from-[#00d4aa] to-[#00d4aa]/40 shadow-[0_0_20px_-4px_rgba(0,212,170,0.6)] transition-all duration-700',
+                  visible ? 'opacity-100 scale-100' : 'opacity-0 scale-90',
+                )}
+                style={{ transitionDelay: visible ? '1.1s' : '0ms' }}
+              >
+                <img
+                  src={NEAR_MISS_STORY.youPhoto}
+                  alt=""
+                  className="w-[42px] h-[42px] sm:w-[48px] sm:h-[48px] rounded-full object-cover block"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#00d4aa] bg-black/60 px-2 py-0.5 rounded-md border border-[#00d4aa]/25">
+                Ты {NEAR_MISS_STORY.youArrived}
+              </span>
+            </div>
+
+            {/* Алина — стоковое фото, маршрут фиолетовый; лёгкий blur для интриги */}
+            <div
+              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
+              style={{ left: `${pinHer.left}%`, top: `${pinHer.top}%` }}
+            >
+              <div
+                className={cn(
+                  'relative rounded-full p-[2px] bg-gradient-to-br from-[#7c3aed] to-[#a78bfa]/50 shadow-[0_0_20px_-4px_rgba(124,58,237,0.55)] transition-all duration-700',
+                  visible ? 'opacity-100 scale-100' : 'opacity-0 scale-90',
+                )}
+                style={{ transitionDelay: visible ? '0.95s' : '0ms' }}
+              >
+                <img
+                  src={NEAR_MISS_STORY.herPhoto}
+                  alt=""
+                  className="w-[42px] h-[42px] sm:w-[48px] sm:h-[48px] rounded-full object-cover block opacity-[0.88]"
+                  style={{ filter: 'blur(0.35px)' }}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#c4b5fd] bg-black/60 px-2 py-0.5 rounded-md border border-[#7c3aed]/30">
+                Она {NEAR_MISS_STORY.sheLeft}
+              </span>
+            </div>
+
+            {/* Центр — почти-встреча */}
+            <div
+              className="absolute -translate-x-1/2 -translate-y-[120%] w-[min(92%,240px)] pointer-events-none"
+              style={{ left: `${pulse.left}%`, top: `${pulse.top}%` }}
+            >
+              <div
+                className={cn(
+                  'rounded-xl border border-amber-500/35 bg-black/75 backdrop-blur-md px-3 py-2.5 shadow-lg transition-all duration-700',
+                  visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+                )}
+                style={{ transitionDelay: visible ? '1.35s' : '0ms' }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="relative shrink-0">
+                    <img
+                      src={NEAR_MISS_STORY.herPhoto}
+                      alt=""
+                      className="w-9 h-9 rounded-full object-cover opacity-55 blur-[2px]"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/35">
+                      <Lock className="w-3.5 h-3.5 text-amber-300/90" aria-hidden />
+                    </div>
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <p className="text-[11px] font-semibold text-amber-100 leading-tight">Почти встретились</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                      {NEAR_MISS_STORY.herFirstName} · {NEAR_MISS_STORY.herHint}
+                    </p>
+                    <p className="text-[10px] text-amber-200/80 mt-1 tabular-nums">
+                      разница {NEAR_MISS_STORY.gapMinutes} мин
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p
+              className={cn(
+                'absolute bottom-3 left-0 right-0 text-center text-[10px] text-slate-600 px-3 leading-snug transition-opacity duration-700',
+                visible ? 'opacity-100' : 'opacity-0',
+              )}
+              style={{ transitionDelay: visible ? '1.6s' : '0ms' }}
+            >
+              Лица — стоковые фото для примера. В приложении — только согласованная приватность и твой выбор.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -437,9 +596,27 @@ export default function LandingPage() {
         )}
       </header>
 
-      {/* Hero */}
-      <section className="relative min-h-[100dvh] flex flex-col items-center justify-center px-4 pt-6 pb-16 overflow-hidden">
+      {/* Hero — кинематографичный WOW */}
+      <section className="relative min-h-[100dvh] flex flex-col items-center justify-center px-4 sm:px-6 pt-8 pb-20 overflow-hidden">
         <KaliningradSilhouette />
+        {/* Световые пятна + лёгкая виньетка */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div
+            className="absolute -top-[20%] left-1/2 h-[min(75vh,620px)] w-[min(140vw,900px)] -translate-x-1/2 rounded-full blur-[100px] animate-nexus-hero-aurora"
+            style={{ background: `radial-gradient(ellipse at center, ${VIOLET}33 0%, transparent 68%)` }}
+          />
+          <div
+            className="absolute bottom-[-15%] right-[-20%] h-[55vh] w-[70vw] max-w-2xl rounded-full blur-[90px] opacity-70"
+            style={{ background: `radial-gradient(circle at 40% 40%, ${TEAL}22 0%, transparent 65%)` }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.35]"
+            style={{
+              background:
+                'radial-gradient(ellipse 80% 50% at 50% 50%, transparent 0%, #0a0a0f 88%)',
+            }}
+          />
+        </div>
         <div className="absolute inset-0 pointer-events-none">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
             {pairs.map(([ia, ib], i) => {
@@ -479,43 +656,104 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        <div className="relative z-10 max-w-xl mx-auto text-center space-y-6">
-          <h1 className="text-[48px] font-medium leading-none tracking-tight" style={{ fontWeight: 500, color: TEXT }}>
-            Nexus
-          </h1>
-          <p className="text-[32px] sm:text-[48px] font-medium leading-[1.12] tracking-tight px-1">
-            Твой город помнит всё. Ты — нет.
+        <div className="relative z-10 w-full max-w-2xl mx-auto text-center flex flex-col items-center gap-8 sm:gap-10">
+          <p
+            className={cn(
+              'nexus-hero-rise nexus-hero-rise-d1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.28em]',
+              'text-[#00d4aa]/90',
+            )}
+          >
+            Реальный город · реальные почти-встречи
           </p>
-          <p className="text-base max-w-md mx-auto leading-relaxed px-1" style={{ color: MUTED }}>
-            Каждый день ты проходишь мимо людей с которыми мог бы познакомиться. Nexus показывает кто это был.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center pt-2">
+
+          <div className="nexus-hero-rise nexus-hero-rise-d2 flex flex-col items-center gap-3">
+            <div className="inline-flex items-center gap-3">
+              <span
+                className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-white/25"
+                aria-hidden
+              />
+              <h1
+                className="text-[2.75rem] sm:text-[3.25rem] font-medium tracking-[-0.04em] leading-none"
+                style={{ fontWeight: 500, color: TEXT }}
+              >
+                Nexus
+              </h1>
+              <span
+                className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-white/25"
+                aria-hidden
+              />
+            </div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
+              Калининград
+            </p>
+          </div>
+
+          <div className="nexus-hero-rise nexus-hero-rise-d3 space-y-2 sm:space-y-3 px-1">
+            <p className="text-[clamp(1.65rem,4.8vw,2.85rem)] font-semibold tracking-[-0.03em] leading-[1.08] text-[#F1F5F9]">
+              Твой город помнит всё.
+            </p>
+            <p className="text-[clamp(1.65rem,4.8vw,2.85rem)] font-semibold tracking-[-0.03em] leading-[1.08] nexus-hero-gradient-text px-2">
+              Ты — нет.
+            </p>
+          </div>
+
+          <div className="nexus-hero-rise nexus-hero-rise-d4 max-w-lg mx-auto space-y-4 px-1">
+            <p className="text-lg sm:text-xl font-medium leading-snug text-slate-200/95">
+              Пока ты смотришь в экран, кто-то только что стоял там, где ты будешь через пятнадцать минут.
+            </p>
+            <p className="text-[15px] sm:text-base leading-relaxed text-slate-400">
+              Nexus находит эти «почти» — кто, где, на сколько минут вы разминулись. Без отметок и лишнего шума.
+              Остаётся решить: написать или просто знать.
+            </p>
+          </div>
+
+          <div className="nexus-hero-rise nexus-hero-rise-d5 w-full max-w-md flex flex-col items-center gap-4 pt-1">
             <button
               type="button"
               onClick={onTelegram}
-              className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-[#7c3aed]/25 transition-transform active:scale-[0.98] w-full sm:w-auto"
+              className={cn(
+                'nexus-hero-cta-shimmer relative inline-flex w-full sm:w-auto min-w-[min(100%,280px)]',
+                'items-center justify-center gap-2 rounded-2xl px-8 py-4 text-base font-semibold text-white',
+                'shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset,0_8px_40px_-8px_rgba(124,58,237,0.65)]',
+                'hover:shadow-[0_0_0_1px_rgba(255,255,255,0.12)_inset,0_12px_48px_-6px_rgba(124,58,237,0.75)]',
+                'transition-all duration-300 active:scale-[0.98]',
+              )}
               style={{ backgroundColor: VIOLET }}
             >
-              <Send className="w-4 h-4 shrink-0" />
-              Войти через Telegram
+              <Send className="w-4 h-4 shrink-0 relative z-[1]" />
+              <span className="relative z-[1]">Войти через Telegram</span>
             </button>
+
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-y-3 gap-x-6 text-sm w-full">
+              <button
+                type="button"
+                onClick={startDemo}
+                className="text-slate-400 hover:text-[#00d4aa] transition-colors underline-offset-4 hover:underline py-1"
+              >
+                Посмотреть демо без входа
+                <span className="whitespace-nowrap"> →</span>
+              </button>
+              <span className="hidden sm:inline text-slate-600 select-none" aria-hidden>
+                ·
+              </span>
+              <button
+                type="button"
+                onClick={() => scrollToId('how-it-works')}
+                className="text-slate-400 hover:text-slate-200 transition-colors underline-offset-4 hover:underline py-1"
+              >
+                Как это работает
+                <span className="whitespace-nowrap"> ↓</span>
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={startDemo}
-            className="text-sm underline-offset-4 hover:underline w-full sm:w-auto"
-            style={{ color: MUTED }}
+
+          <p
+            className={cn(
+              'nexus-hero-rise nexus-hero-rise-d6 text-[11px] text-slate-600 max-w-sm leading-relaxed',
+            )}
           >
-            Посмотреть демо без входа →
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollToId('how-it-works')}
-            className="text-sm underline-offset-4 hover:underline w-full sm:w-auto"
-            style={{ color: MUTED }}
-          >
-            Посмотреть как это работает ↓
-          </button>
+            Бесплатно · только Калининград · данные под твоим контролем
+          </p>
         </div>
       </section>
 
