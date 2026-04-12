@@ -37,46 +37,49 @@ interface GraphLevel {
   level: number;
   title: string;
   emoji: string;
-  minPoints: number;
+  minXP: number;
   gradient: string;
   unlock: string;
   unlockIcon: typeof Eye;
 }
 
 const LEVELS: GraphLevel[] = [
-  { level: 1, title: 'Новичок', emoji: '🌱', minPoints: 0,
-    gradient: 'linear-gradient(135deg, hsl(160 60% 22%), hsl(160 70% 38%))',
-    unlock: 'Базовый профиль и лента', unlockIcon: Users },
-  { level: 2, title: 'Знакомый', emoji: '🤝', minPoints: 3,
+  { level: 1, title: 'Новичок', emoji: '🌱', minXP: 0,
+    gradient: 'linear-gradient(135deg, hsl(220 10% 30%), hsl(220 10% 45%))',
+    unlock: 'Базовые функции', unlockIcon: Users },
+  { level: 2, title: 'Свой человек', emoji: '🤝', minXP: 11,
     gradient: 'linear-gradient(135deg, hsl(200 60% 25%), hsl(200 75% 48%))',
-    unlock: 'Видишь кто идёт на события', unlockIcon: Users },
-  { level: 3, title: 'Свой человек', emoji: '👁', minPoints: 7,
+    unlock: 'Видишь кто анонимно смотрел профиль', unlockIcon: Eye },
+  { level: 3, title: 'Душа города', emoji: '💜', minXP: 31,
     gradient: 'linear-gradient(135deg, hsl(263 60% 30%), hsl(263 70% 55%))',
-    unlock: 'Кто смотрел твой профиль', unlockIcon: Eye },
-  { level: 4, title: 'Связной', emoji: '⚡', minPoints: 12,
+    unlock: 'Можешь создавать события', unlockIcon: CalendarPlus },
+  { level: 4, title: 'Легенда', emoji: '🔥', minXP: 61,
     gradient: 'linear-gradient(135deg, hsl(35 60% 28%), hsl(35 80% 50%))',
-    unlock: 'Приоритет в подборе', unlockIcon: Sparkles },
-  { level: 5, title: 'Организатор', emoji: '🚀', minPoints: 18,
-    gradient: 'linear-gradient(135deg, hsl(340 60% 30%), hsl(340 75% 50%))',
-    unlock: 'Создавай свои события', unlockIcon: CalendarPlus },
+    unlock: 'Твои моменты живут 30 дней вместо 7', unlockIcon: Sparkles },
 ];
 
-function getLevel(pts: number) {
+function getLevel(xp: number) {
   let idx = 0;
   for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (pts >= LEVELS[i].minPoints) { idx = i; break; }
+    if (xp >= LEVELS[i].minXP) { idx = i; break; }
   }
   const current = LEVELS[idx];
   const next = idx < LEVELS.length - 1 ? LEVELS[idx + 1] : null;
   const progress = next
-    ? Math.min(100, ((pts - current.minPoints) / (next.minPoints - current.minPoints)) * 100)
+    ? Math.min(100, ((xp - current.minXP) / (next.minXP - current.minXP)) * 100)
     : 100;
   return { current, next, progress };
 }
 
-function computePoints(s: { connectionsUnique: number; eventsAndPlaces: number }) {
-  return s.connectionsUnique + Math.floor(s.eventsAndPlaces * 0.5);
-}
+/** Mock: 18 XP (Level 2) */
+const MOCK_XP = 18;
+
+const XP_HINTS = [
+  '+1 XP — посетил новое место',
+  '+2 XP — сохранил день в граф',
+  '+3 XP — познакомился с кем-то',
+  '+5 XP — сходил на событие',
+];
 
 function userInitials(name: string) {
   const p = name.trim().split(/\s+/);
