@@ -30,6 +30,7 @@ export default function NearMissSheet({
   const hasNext = Boolean(nextStop && onGoToNextStop);
 
   return (
+    <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent
         side="bottom"
