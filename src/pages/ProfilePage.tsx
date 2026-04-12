@@ -284,8 +284,8 @@ export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer'
     return Array.from(people.values()).slice(0, 12);
   }, [mergedNodes]);
 
-  const points = computePoints(stats);
-  const levelInfo = getLevel(points);
+  const xp = MOCK_XP;
+  const levelInfo = getLevel(xp);
 
   const hour = new Date().getHours();
   const greeting =
@@ -417,7 +417,7 @@ export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer'
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">До «{levelInfo.next.title}»</span>
-                <span className="text-foreground font-medium tabular-nums">{levelInfo.next.minPoints - points} ост.</span>
+                <span className="text-foreground font-medium tabular-nums">{levelInfo.next.minXP - xp} XP ост.</span>
               </div>
               <Progress value={levelInfo.progress} className="h-1.5 bg-secondary" />
             </div>
