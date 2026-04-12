@@ -349,6 +349,14 @@ export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer'
         </div>
       </div>
 
+      {/* Privacy mode control */}
+      {onPrivacyChange && (
+        <div className="space-y-2 animate-fade-up">
+          <PrivacyModeControl mode={privacyMode} onChange={onPrivacyChange} />
+          <PrivacyBanner mode={privacyMode} />
+        </div>
+      )}
+
       <p className="text-center text-[15px] text-muted-foreground leading-relaxed px-1">
         <span className="font-semibold tabular-nums text-foreground">{statEventsPlaces}</span> событий и мест ·{' '}
         <span className="font-semibold tabular-nums text-foreground">{statConnections}</span> знакомств
