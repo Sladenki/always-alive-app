@@ -26,6 +26,8 @@ import {
 
 interface ProfilePageProps {
   onNavigateToFeed: () => void;
+  privacyMode?: import('@/components/OnboardingFlow').PrivacyMode;
+  onPrivacyChange?: (m: import('@/components/OnboardingFlow').PrivacyMode) => void;
 }
 
 /* ─── Level system ─── */
@@ -251,7 +253,7 @@ function ProfileGraph({ nodes, onSelect }: { nodes: ProfileGraphNode[]; onSelect
 }
 
 /* ─── Main ─── */
-export default function ProfilePage({ onNavigateToFeed }: ProfilePageProps) {
+export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer', onPrivacyChange }: ProfilePageProps) {
   const { isAuthenticated, userName, userRole } = useAuth();
   const { eventAcquaintances, placeAcquaintances, placeVisitCounts } = useAppState();
   const [sheetNode, setSheetNode] = useState<ProfileGraphNode | null>(null);

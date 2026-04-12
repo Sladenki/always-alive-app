@@ -41,6 +41,8 @@ interface MapPageProps {
   onEventClick: (id: string) => void;
   mapIntent?: MapIntent | null;
   onConsumeMapIntent?: () => void;
+  privacyMode?: import('@/components/OnboardingFlow').PrivacyMode;
+  onPrivacyChange?: (m: import('@/components/OnboardingFlow').PrivacyMode) => void;
 }
 
 const CENTER: [number, number] = [54.7104, 20.5114];
@@ -142,7 +144,7 @@ function categoryPlaceIcon(cat: string) {
   return MapPin;
 }
 
-export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent }: MapPageProps) {
+export default function MapPage({ onEventClick, mapIntent, onConsumeMapIntent, privacyMode, onPrivacyChange }: MapPageProps) {
   const [mapMode, setMapMode] = useState<'events' | 'places'>('events');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
