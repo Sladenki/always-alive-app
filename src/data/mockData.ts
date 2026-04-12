@@ -11,7 +11,7 @@ import {
 
 const AVA = 'https://i.pravatar.cc/150?img=';
 
-export const pAlina: PersonData = { id: 'p-alina', name: 'Алина К.', role: 'Дизайн · КГТУ', avatarUrl: `${AVA}1` };
+export const pAlina: PersonData = { id: 'p-alina', name: 'Катя К.', role: 'Дизайн · КГТУ', avatarUrl: `${AVA}1` };
 export const pMaxim: PersonData = { id: 'p-maxim', name: 'Максим Р.', role: 'Разработчик · БФУ', avatarUrl: `${AVA}3` };
 export const pKatya: PersonData = { id: 'p-katya', name: 'Катя В.', role: 'Студентка · КГТУ', avatarUrl: `${AVA}5` };
 export const pDima: PersonData = { id: 'p-dima', name: 'Дима С.', role: 'Бэкенд · КГТУ', avatarUrl: `${AVA}7` };
@@ -122,7 +122,7 @@ export const onboardingNotifications: NotificationData[] = [];
 /** Демо match partner для «Совпадение» на событии */
 export const demoMatchPerson: MatchPersonData = {
   id: 'gx-alina',
-  name: 'Алина',
+  name: 'Катя',
   subtitle: 'Дизайн · КГТУ',
   bio: 'Дизайнер, люблю джаз и кофе',
   initials: 'А',
@@ -137,7 +137,7 @@ export const demoPlaceMatchPerson: MatchPersonData = {
   initials: 'М',
 };
 
-const gpAlina: PersonData = { id: 'gx-alina', name: 'Алина К.', role: 'Дизайн · КГТУ', avatarUrl: `${AVA}1` };
+const gpAlina: PersonData = { id: 'gx-alina', name: 'Катя К.', role: 'Дизайн · КГТУ', avatarUrl: `${AVA}1` };
 const gpMaxim: PersonData = { id: 'gx-maxim', name: 'Максим Р.', role: 'Разработчик · БФУ', avatarUrl: `${AVA}3` };
 const gpKatya: PersonData = { id: 'gx-katya', name: 'Катя В.', role: 'Студентка · КГТУ', avatarUrl: `${AVA}5` };
 const gpDima: PersonData = { id: 'gx-dima', name: 'Дима С.', role: 'Бэкенд · КГТУ', avatarUrl: `${AVA}7` };
@@ -297,7 +297,7 @@ export const placeNotificationsMock: NotificationData[] = [
   {
     id: 'pn-map',
     icon: '🟢',
-    text: 'Алина сейчас в «Типографии» — ты рядом?',
+    text: 'Катя сейчас в «Типографии» — ты рядом?',
     time: 'только что',
     isRead: false,
     kind: 'place_map',

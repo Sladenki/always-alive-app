@@ -89,7 +89,7 @@ export const mockNearMisses: NearMissData[] = [
     people: [
       {
         id: 'nm-alina',
-        name: 'Алина',
+        name: 'Катя',
         avatarUrl: 'https://i.pravatar.cc/150?img=1',
         timeLabel: 'была здесь в 11:20',
         deltaLabel: 'на 40 минут позже тебя',

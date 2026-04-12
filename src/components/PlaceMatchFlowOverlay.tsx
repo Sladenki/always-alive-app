@@ -357,7 +357,7 @@ export default function PlaceMatchFlowOverlay({ place, open, onClose }: PlaceMat
                 />
               ))}
             </div>
-            <p className="text-white text-[15px] font-medium leading-relaxed">Алина отвечает…</p>
+            <p className="text-white text-[15px] font-medium leading-relaxed">Катя отвечает…</p>
           </div>
         </div>
       )}

@@ -99,7 +99,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const n: NotificationData = {
         id: `fomo-${Date.now()}`,
         icon: '✨',
-        text: 'Алина тоже идёт на воркшоп по UI/UX — познакомиться?',
+        text: 'Катя тоже идёт на воркшоп по UI/UX — познакомиться?',
         time: 'только что',
         isRead: false,
         kind: 'fomo',

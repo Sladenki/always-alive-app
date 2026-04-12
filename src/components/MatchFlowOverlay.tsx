@@ -357,7 +357,7 @@ export default function MatchFlowOverlay({ event, open, onClose }: MatchFlowOver
                 />
               ))}
             </div>
-            <p className="text-white text-sm font-medium">Алина отвечает...</p>
+            <p className="text-white text-sm font-medium">Катя отвечает...</p>
           </div>
         </div>
       )}

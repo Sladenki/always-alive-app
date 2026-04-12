@@ -1,14 +1,14 @@
-import { useCallback, useState } from 'react';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
 import { LocationProvider } from '@/contexts/LocationContext';
-import AuthSheet from '@/components/AuthSheet';
 import BottomNav from '@/components/BottomNav';
 import MatchFlowOverlay from '@/components/MatchFlowOverlay';
 import PlaceMatchFlowOverlay from '@/components/PlaceMatchFlowOverlay';
 import OpeningSplash from '@/components/OpeningSplash';
 import OnboardingFlow, { type PrivacyMode } from '@/components/OnboardingFlow';
 import DevPanel from '@/components/DevPanel';
+import DemoModeBanner from '@/components/DemoModeBanner';
 import EveningRecallOverlay from '@/components/EveningRecallOverlay';
 import EveningDigest from '@/components/EveningDigest';
 import SmartModePrompt from '@/components/SmartModePrompt';
@@ -34,13 +34,18 @@ function getStoredPrivacy(): PrivacyMode {
 }
 
 const Index = () => {
+  const { isDemoMode } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('feed');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [matchEventId, setMatchEventId] = useState<string | null>(null);
   const [matchPlaceId, setMatchPlaceId] = useState<string | null>(null);
   const [mapIntent, setMapIntent] = useState<MapIntent | null>(null);
   const [splashActive, setSplashActive] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(!isOnboarded());
+  const [showOnboarding, setShowOnboarding] = useState(() => !isOnboarded());
+
+  useEffect(() => {
+    if (isDemoMode) setShowOnboarding(false);
+  }, [isDemoMode]);
   const [privacyMode, setPrivacyMode] = useState<PrivacyMode>(getStoredPrivacy());
 
   const finishSplash = useCallback(() => setSplashActive(false), []);
@@ -130,50 +135,50 @@ const Index = () => {
   };
 
   return (
-    <AuthProvider>
-      <AppStateProvider>
-        <LocationProvider>
-          <OpeningSplash active={splashActive} onComplete={finishSplash} />
+    <AppStateProvider>
+      <LocationProvider>
+        <OpeningSplash active={splashActive} onComplete={finishSplash} />
 
-          {!splashActive && showOnboarding && (
-            <OnboardingFlow onComplete={handleOnboardingComplete} />
+        {!splashActive && showOnboarding && (
+          <OnboardingFlow onComplete={handleOnboardingComplete} />
+        )}
+
+        <div
+          className={cn(
+            'min-h-screen bg-background transition-opacity duration-500 ease-out overflow-x-hidden',
+            (splashActive || showOnboarding) ? 'opacity-0 pointer-events-none' : 'opacity-100',
           )}
-
+        >
+          {!splashActive && !showOnboarding && isDemoMode && (
+            <DemoModeBanner className="sticky top-0 z-30" />
+          )}
           <div
-            className={cn(
-              'min-h-screen bg-background transition-opacity duration-500 ease-out overflow-x-hidden',
-              (splashActive || showOnboarding) ? 'opacity-0 pointer-events-none' : 'opacity-100',
-            )}
+            key={contentKey}
+            className={cn('max-w-full overflow-x-hidden', !selectedEventId && 'animate-tab-screen-in')}
           >
-            <div
-              key={contentKey}
-              className={cn('max-w-full overflow-x-hidden', !selectedEventId && 'animate-tab-screen-in')}
-            >
-              {renderContent()}
-            </div>
-            {matchEvent && (
-              <MatchFlowOverlay event={matchEvent} open onClose={() => setMatchEventId(null)} />
-            )}
-            {matchPlace && (
-              <PlaceMatchFlowOverlay place={matchPlace} open onClose={() => setMatchPlaceId(null)} />
-            )}
-            <BottomNav
-              activeTab={activeTab}
-              onTabChange={(tab) => {
-                setSelectedEventId(null);
-                setActiveTab(tab);
-              }}
-            />
-            <AuthSheet />
-            <DevPanel />
-            <EveningRecallOverlay />
-            <EveningDigest privacyMode={privacyMode} onSaveDay={() => {}} />
-            <SmartModePrompt />
-            <PlaceSuggestionToast />
+            {renderContent()}
           </div>
-        </LocationProvider>
-      </AppStateProvider>
-    </AuthProvider>
+          {matchEvent && (
+            <MatchFlowOverlay event={matchEvent} open onClose={() => setMatchEventId(null)} />
+          )}
+          {matchPlace && (
+            <PlaceMatchFlowOverlay place={matchPlace} open onClose={() => setMatchPlaceId(null)} />
+          )}
+          <BottomNav
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setSelectedEventId(null);
+              setActiveTab(tab);
+            }}
+          />
+          <DevPanel />
+          <EveningRecallOverlay />
+          <EveningDigest privacyMode={privacyMode} onSaveDay={() => {}} />
+          <SmartModePrompt />
+          <PlaceSuggestionToast />
+        </div>
+      </LocationProvider>
+    </AppStateProvider>
   );
 };
 
