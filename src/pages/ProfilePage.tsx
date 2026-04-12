@@ -410,7 +410,7 @@ export default function ProfilePage({ onNavigateToFeed, privacyMode = 'observer'
       <div className="rounded-2xl glass p-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-foreground">Прогресс</span>
-          <span className="text-xs text-muted-foreground tabular-nums">{points} очков</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{xp} XP</span>
         </div>
         {levelInfo.next ? (
           <>
